@@ -135,7 +135,7 @@ section[id^="step-"] ol.todo li::before{counter-increment:t;content:counter(t);f
 #harp .why{margin:0 0 10px}#harp .check{margin:8px 0}#harp pre.out{white-space:pre-wrap;word-break:break-all}
 .fm-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;align-items:start}@media (max-width:760px){.fm-grid{grid-template-columns:1fr}}
 .fm-box{background:var(--surface2)}
-.breath-box{border-left:4px solid #4FA3D9}.direct-box{border-left:4px solid #C0392B}.direct-svg{width:100%;display:block}.breath-svg{width:100%;max-width:560px;display:block;margin:4px 0 8px}
+.breath-box{border-left:4px solid #4FA3D9}.direct-box{border-left:4px solid #C0392B}.tap-box{border-left:4px solid #E0A100}.lvl-svg{width:100%;max-width:560px;display:block;margin:0 0 10px}.direct-svg{width:100%;display:block}.breath-svg{width:100%;max-width:560px;display:block;margin:4px 0 8px}
 .use-grid.one{grid-template-columns:minmax(0,640px)}
 #sos-sound .why{margin:0 0 8px}.tb-wrap{max-width:520px}
 .tb-ard{fill:var(--surface2);stroke:var(--line)}.tb-board{fill:var(--board,#F4F2EC);stroke:var(--line)}
@@ -272,7 +272,7 @@ code.hole{background:var(--surface2);font-weight:500}
   #mic-rgb .check>div{padding:5px 10px;font-size:11.5px}
   #mic-rgb .side .photo img{max-height:120px;object-fit:contain}
   .breath-box{font-size:11.5px}
-  .direct-box{font-size:11.5px}.direct-box .board-wrap{max-width:360px}
+  .direct-box{font-size:11.5px}.tap-box{font-size:11.5px}.tap-box .check>div{padding:5px 10px}.direct-box .board-wrap{max-width:360px}
   #two-btn .check>div{padding:5px 10px;font-size:11.5px}
   #two-btn .step-head{margin-bottom:8px}
   #two-btn .side .photo img{max-height:120px;object-fit:cover}
@@ -822,10 +822,10 @@ C  C  G  G  A  A  G-  │ F  F  E  E  D  D  C-
 </section>
 
 <section id="mic-rgb">
-  <div class="step-head"><span class="step-no">13</span><div class="t"><h2>소리 센서 + RGB 라이트</h2><p class="lede">소리를 <b>빛</b>으로 바꾸고, 글자·음마다 <b>새 색</b>이 켜지게 해요. <b>숨·목소리·박수·쿵쿵</b>으로 점·대시를 치고, 아주 긴 소리면 HERE가 자동으로 쳐져요.</p></div></div>
+  <div class="step-head"><span class="step-no">13</span><div class="t"><h2>소리 센서 + RGB 라이트</h2><p class="lede">소리 크기를 <b>무지개빛</b>으로 바꾸고, 글자·음마다 <b>새 색</b>이 켜져요. <b>숨·목소리·쿵쿵</b>으로 점·대시를 치고, 손톱으로 <b>톡톡</b> 치거나, 빠르게 5번 이상 치면 <b>긴급 SOS</b>가 나가요.</p></div></div>
   <div class="step-grid">
     <div class="side">
-      <figure class="photo"><img src="img/mic.jpg" alt="빨간 소리 센서 모듈, 핀 AO G + DO"><figcaption>소리 센서: 핀 <b>AO · G · + · DO</b>. 은색 통이 마이크, 파란 나사가 감도</figcaption></figure>
+      <figure class="photo"><img src="img/mic.jpg" alt="빨간 소리 센서 모듈, 핀 AO G + DO"><figcaption>소리 센서: 핀 <b>AO · G · + · DO</b>. 은색 통이 마이크 (파란 나사는 DO 핀용이라 이 코드에선 안 써요)</figcaption></figure>
       <figure class="photo"><img src="img/rgb.jpg" alt="검은 RGB 라이트 모듈, 핀 R G B GND"><figcaption>RGB 라이트: 핀 <b>R · G · B · GND</b>. 저항이 판에 이미 붙어 있어요</figcaption></figure>
     </div>
     <div class="main">
@@ -900,22 +900,38 @@ C  C  G  G  A  A  G-  │ F  F  E  E  D  D  C-
       <li>글자 사이엔 <b>1.5초</b> 쉬어요(숨 쉴 시간을 넉넉하게). 3.5초 = 띄어쓰기, 7초 = 문장 끝 → 음이름이면 연주.</li>
       <li>예: "후 후 후"(점 3) → 1.5초 쉼 → S · "아~~"(대시) → T</li>
     </ol>
-    <p class="note" style="margin:6px 0 0"><b>민감도는 자동이에요.</b> 켜 두면 방이 조용할 때의 소음을 스스로 배워서, 그보다 확실히 큰 소리만 잡아요 (조용한 방이면 기준 ≈ 14, 시끄러우면 높아짐, 최대 40). <code class="hole">miclevel</code>을 치면 "조용할 때 소음 · 지금 기준"이 보여요. 숨은 세기가 오르내려서 중간에 잠깐 작아져도 <b>0.25초까지는 한 번</b>으로 이어서 봐요. 부저가 울리는 동안과 그 뒤 0.4초는 듣지 않아서 제 소리에 반응하지 않아요. 끄고 켜기: <code class="hole">mic</code>. 반응이 약하면 <code class="hole">miclevel</code>로 숫자가 40보다 커지는지 보고, 파란 나사로 감도를 올려요. 작품으로는 <b>숨이 곧 글자와 빛</b>이 되고, 긴 숨 하나가 "여기 있어요(HERE)"가 돼요.</p>
+    <p class="note" style="margin:6px 0 0"><b>민감도는 자동이에요.</b> 켜 두면 방이 조용할 때의 소음을 스스로 배워서, 그보다 확실히 큰 소리만 잡아요 (조용한 방이면 기준 ≈ 14, 시끄러우면 높아짐, 최대 40). <code class="hole">miclevel</code>을 치면 "조용할 때 소음 · 지금 기준"이 보여요. 숨은 세기가 오르내려서 중간에 잠깐 작아져도 <b>0.25초까지는 한 번</b>으로 이어서 봐요. 부저가 울리는 동안과 그 뒤 0.4초는 듣지 않아서 제 소리에 반응하지 않아요. 끄고 켜기: <code class="hole">mic</code>. 반응이 약하면 <code class="hole">miclevel</code>로 숫자가 40보다 커지는지 보고, 마이크에 더 가까이 소리를 내요. 작품으로는 <b>숨이 곧 글자와 빛</b>이 되고, 긴 숨 하나가 "여기 있어요(HERE)"가 돼요.</p>
+  </div>
+  <div class="why tap-box">
+    <h3 class="use-h" style="margin-top:0">👆 손톱으로 톡톡: 1번 = 점 · 2번 = 대시 · 5번 넘게 = 긴급 SOS</h3>
+    <div class="check" role="table" aria-label="톡톡 치기">
+      <div role="columnheader">치기</div><div role="columnheader">결과</div>
+      <div><b>톡</b> (한 번, 0.4초 쉬기)</div><div><b>점 ·</b></div>
+      <div><b>톡톡</b> (빠르게 두 번)</div><div><b>대시 −</b></div>
+      <div><b>톡톡톡톡톡</b> (5번 넘게 빠르게)</div><div>🆘 <b>긴급 SOS 3번</b> · 회전 센서와 상관없이 <b>최대 소리</b> · 빨강 깜빡</div>
+    </div>
+    <p style="margin:8px 0 4px"><b>예) SOS를 직접 치기:</b> 톡 · 톡 · 톡 (각각 0.4초씩 띄우기) → 1.5초 쉬기 → 톡톡 · 톡톡 · 톡톡 → 1.5초 → 톡 · 톡 · 톡. <b>급할 땐 그냥 톡톡톡톡톡 빠르게 5번</b>이면 돼요.</p>
+    <p class="note" style="margin:6px 0 0"><b>잘 인식되게 하는 법</b> ① 마이크(은색 통) <b>옆면이나 바로 옆 판</b>을 손톱으로 톡 쳐요 — 구멍에 직접 대면 너무 크게 잡혀요. ② 센서를 <b>테이프로 책상에 붙여</b> 흔들리지 않게 하면 손이 스치는 잡음이 줄어요. ③ 톡과 톡 사이는 <b>0.1~0.3초</b>(빠르게)면 한 묶음, <b>0.4초 넘게</b> 쉬면 다음 기호예요. ④ <code class="hole">miclevel</code>로 톡 칠 때 숫자가 기준보다 커지는지 확인해요. 파란 나사는 DO(안 쓰는 핀)용이라 돌려도 이 기능엔 영향이 없어요.</p>
   </div>
   <div class="use-grid">
     <div>
       <h3 class="use-h">RGB 라이트가 하는 일</h3>
+      <svg class="lvl-svg" viewBox="0 0 560 54" role="img" aria-label="소리 크기에 따른 RGB 색">
+<defs><linearGradient id="lvlg" x1="0" x2="1"><stop offset="0" stop-color="#000"/><stop offset=".08" stop-color="#5B2BB5"/><stop offset=".25" stop-color="#2F6FD6"/><stop offset=".4" stop-color="#1FB5B5"/><stop offset=".55" stop-color="#2FA35A"/><stop offset=".7" stop-color="#F2C230"/><stop offset=".82" stop-color="#F08A24"/><stop offset=".92" stop-color="#E0483C"/><stop offset="1" stop-color="#fff"/></linearGradient></defs>
+<rect x="0" y="6" width="560" height="22" rx="11" fill="url(#lvlg)" stroke="var(--line)"/>
+<g font-size="11" fill="var(--muted)"><text x="0" y="46">조용 (꺼짐)</text><text x="110" y="46">작은 소리</text><text x="270" y="46">말소리</text><text x="400" y="46">큰 소리</text><text x="505" y="46">아주 큼</text></g></svg>
       <div class="check" role="table" aria-label="RGB 응용">
         <div role="columnheader">언제</div><div role="columnheader">빛</div>
         <div>점 · 대시 누를 때</div><div>점 = <b>노란빛</b>, 대시 = <b>자홍빛</b></div>
         <div>글자가 확정될 때</div><div><b>글자마다 새 색</b> (A~Z가 무지개를 한 바퀴, ? = 빨강)</div>
         <div>멜로디 연주</div><div><b>음마다 색</b>: 도 빨강 → 레 주황 → 미 노랑 → 파 초록 → 솔 하늘 → 라 파랑 → 시 보라</div>
         <div>STILL HERE</div><div>임계점에 <b>하얗게 차오르다</b> 끊김 → 정적에 <b>푸른 잔상</b> → 숨에서 음 색으로 스며듦</div>
-        <div>아무것도 안 할 때</div><div><b>방 소리 크기를 빛으로</b>: 조용하면 꺼짐, 클수록 초록 → 노랑 → 빨강</div>
+        <div>아무것도 안 할 때</div><div><b>방 소리 크기를 무지개빛으로</b>: 조용하면 꺼짐 → 작은 소리 보라·파랑 → 청록 → 초록 → 노랑 → 주황 → 빨강 → 아주 크면 하양. 갑자기 큰 소리엔 하얗게 반짝, 소리가 그치면 천천히 식어요</div>
         <div>회전 센서 돌릴 때</div><div>소리 크기 = 색: 작으면 <b>파랑</b> → 크면 <b>빨강</b></div>
         <div>음 바꾸기 (두 버튼)</div><div>새 음 세트의 색이 잠깐 켜져요</div>
         <div>Serial로 글자 보내기</div><div>점 노랑 · 대시 자홍, 글자가 끝나면 <b>그 글자 색</b></div>
-        <div>숨·목소리를 낼 때</div><div><b>소리 세기만큼 푸르게</b>, 2.5초가 넘으면 청록(HERE)</div>
+        <div>숨·목소리를 낼 때</div><div>소리 세기에 따라 <b>무지개빛</b>으로 바뀌고, 2.5초가 넘으면 청록(HERE)</div>
+        <div>톡톡 칠 때</div><div>톡마다 노란빛, 점 = 노랑 · 대시 = 자홍, 긴급 SOS = 빨강 깜빡</div>
       </div>
     </div>
     <div>
@@ -926,7 +942,7 @@ C  C  G  G  A  A  G-  │ F  F  E  E  D  D  C-
         <div><code class="hole">mic</code></div><div>숨·목소리로 치기 끄기/켜기 (처음엔 켜져 있어요)</div>
         <div><code class="hole">rgb</code></div><div>RGB 무지개 한 바퀴 (점검)</div>
       </div>
-      <p class="note">반응이 너무 둔하거나 예민하면 센서의 <b>파란 나사</b>를 드라이버로 조금씩 돌리거나, 코드의 <code class="hole">MIC_THRESHOLD</code>(자동 기준의 최댓값, 지금 40)를 바꿔요.</p>
+      <p class="note">반응이 너무 둔하거나 예민하면 소리를 마이크에 더 가까이 내거나, 코드의 <code class="hole">MIC_THRESHOLD</code>(자동 기준의 최댓값, 지금 40)를 바꿔요.</p>
     </div>
   </div>
 </section>

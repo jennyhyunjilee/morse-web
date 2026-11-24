@@ -203,6 +203,7 @@ void rgbFlash(int hue, int v, unsigned long ms) { setHue(hue, v); rgbHoldUntil =
 // =============================================================
 int micFloor = 3 * 16, micThOn = 20;            // 바닥 소음(×16)과 지금 기준 (소리 센서)
 bool micMode = false;                           // 마지막 입력이 소리였으면 글자·띄어쓰기 시간을 넉넉하게
+int meterLv = 0; unsigned long flashUntil = 0;   // 빛 미터 (천천히 식는 소리 크기)
 int micLevel = 0;                               // 0~ (조용하면 한 자리, 박수·목소리면 수십~수백)
 int micMin = 1023, micMax = 0;
 unsigned long micWindow = 0;
@@ -211,7 +212,23 @@ void micUpdate() {
   int v = analogRead(MIC_PIN);
   if (v < micMin) micMin = v;
   if (v > micMax) micMax = v;
-  if (millis() - micWindow >= 25) { micLevel = micMax - micMin; micMin = 1023; micMax = 0; micWindow = millis(); }
+  if (millis() - micWindow >= 25) {
+    int prev = micLevel;
+    micLevel = micMax - micMin; micMin = 1023; micMax = 0; micWindow = millis();
+    meterLv = max(micLevel, meterLv * 4 / 5);                      // 빛은 천천히 식어요 (숨 쉬듯)
+    if (micLevel > prev * 3 && micLevel > micThOn * 3) flashUntil = millis() + 70;   // 갑자기 큰 소리 = 하얀 반짝
+  }
+}
+
+// 소리 크기 → 색: 작을수록 보라·파랑, 커질수록 청록 → 초록 → 노랑 → 주황 → 빨강, 아주 크면 하양
+void soundColor(int lv, unsigned long now) {
+  int lo = max(8, micThOn * 2 / 3);
+  if (now < flashUntil) { setRGB(200, 200, 200); return; }
+  if (lv <= lo) { setRGB(0, 0, 0); return; }
+  float t = log((float)lv / lo) / log(500.0 / lo);
+  if (t > 1) t = 1;
+  if (t > 0.92) { int w = (t - 0.92) / 0.08 * 255; setRGB(255, 120 + w / 2, w); return; }   // 아주 큼: 빨강 → 하양
+  setHue(270 - (int)(t * 290), 30 + (int)(t * 225));
 }
 
 bool pressedAny() { return digitalRead(BUTTON_PIN) == LOW || (TWO_BUTTONS && digitalRead(DASH_BUTTON_PIN) == LOW); }
@@ -653,10 +670,8 @@ bool handleMicKey(unsigned long now) {
 // 아무 일도 없을 때 RGB: 소리 센서 크기를 빛으로 (조용하면 꺼짐, 클수록 초록 → 노랑 → 빨강)
 void rgbIdle(unsigned long now) {
   if (!USE_RGB || now < rgbHoldUntil || pressed || dashPressed || micDown) return;
-  if (USE_MIC && micLevel > 12) {
-    int lv = constrain(micLevel, 12, 300);
-    setHue(map(lv, 12, 300, 120, 0), map(lv, 12, 300, 30, 255));
-  } else setRGB(0, 0, 0);
+  if (USE_MIC) soundColor(meterLv, now);         // 방 소리를 무지개빛으로
+  else setRGB(0, 0, 0);
 }
 
 void micLevelPrint() {                          // miclevel: 4초 동안 소리 크기를 막대로
@@ -711,6 +726,37 @@ bool handleBreath(unsigned long now) {
   return dur >= BREATH_MIN;
 }
 
+// ---------- 톡톡 치기 (손톱으로 마이크 톡, 책상 쿵, 박수 짝) ----------
+//  짧은 소리를 '톡'으로 세고, 0.4초 동안 다음 톡이 없으면 묶음이 끝나요.
+//  톡 1번 = 점 · 톡톡 2번 = 대시 · 5번 넘게 빠르게 = 긴급 SOS (3번, 최대 소리)
+const unsigned long TAP_MAX = 180, TAP_GROUP_GAP = 400;
+int tapCount = 0;
+unsigned long tapLast = 0;
+void emergencySOS() {
+  Serial.println(F("\n[긴급] 톡톡톡톡톡 → SOS 3번 (최대 소리)"));
+  int saved = knobVolume; knobVolume = 10;               // 회전 센서와 상관없이 가장 크게
+  symbols = "";
+  for (int i = 0; i < 3; i++) {
+    sendHue = 0; sendText("SOS"); sendHue = -1;
+    for (int k = 0; k < 3; k++) { setRGB(255, 0, 0); delay(120); setRGB(0, 0, 0); delay(120); }
+  }
+  knobVolume = saved;
+  quietSince = millis();
+}
+void resolveTaps(unsigned long now) {
+  int n = tapCount; tapCount = 0;
+  if (n >= 5) { emergencySOS(); releaseTime = millis(); return; }
+  if (n >= 3) { Serial.print(F("\n[톡] ")); Serial.print(n); Serial.println(F("번 → (1번 = 점 · 2번 = 대시 · 5번 이상 = 긴급 SOS)")); return; }
+  char sym = (n == 1) ? '.' : '-';
+  Serial.print(F("\n[톡] ")); Serial.print(n); Serial.print(F("번 → ")); Serial.println(sym == '.' ? F("점") : F("대시"));
+  if (symbols.length() == 0) Serial.print(F("  "));
+  symbols += sym; Serial.print(sym);
+  wordSpaceDone = false; releaseTime = now; micMode = true;
+  digitalWrite(sym == '.' ? DOT_LED : DASH_LED, HIGH); setHue(sym == '.' ? 50 : 320, 230);
+  delay(120);
+  digitalWrite(DOT_LED, LOW); digitalWrite(DASH_LED, LOW); setRGB(0, 0, 0);
+}
+
 // ---------- 숨 · 목소리 · 박수로 모스부호 치기 ----------
 //  소리가 '이어지는 동안'을 한 번으로 봐요. 숨은 세기가 오르내려서 사이사이 잠깐 작아져도 0.25초까지는 이어진 걸로 쳐요.
 //  짧게(0.6초 미만) = 점 · 길게(0.6초~) = 대시 · 아주 길게(2.5초~) = HERE 자동 송신
@@ -725,7 +771,8 @@ bool handleSoundKey(unsigned long now) {
   if (!USE_MIC || !soundKey) return false;
   if (noteActive) { quietSince = now; sOn = false; sEnv = 0; return false; }
   if (now - quietSince < 400) return false;
-  if (now - sEnvT >= 25) { sEnvT = now; sEnv = max(micLevel, sEnv * 3 / 4); }   // 부드럽게 (갑자기 0이 되지 않게)
+  if (now - sEnvT >= 25) { sEnvT = now; sEnv = max(micLevel, sEnv / 2); }   // 툭 같은 짧은 소리도 빨리 끝나게
+  if (tapCount && !sOn && now - tapLast > TAP_GROUP_GAP) resolveTaps(now);  // 톡톡 묶음이 끝났으면 뜻 정하기
   // 방이 조용할 때의 소리(바닥 소음)를 천천히 배워서, 그보다 확실히 크면 '소리'로 봐요
   if (!sOn && micLevel < micThOn) micFloor = (micFloor * 31 + micLevel * 16 + 16) / 32;   // 16배로 저장 (소수점 대신)
   micThOn = constrain(micFloor / 16 * 2 + 12, 14, MIC_THRESHOLD);
@@ -735,16 +782,21 @@ bool handleSoundKey(unsigned long now) {
     return false;
   }
   unsigned long dur = now - sStart;
-  int v = constrain(map(sEnv, thOff, 300, 40, 255), 40, 255);
-  if (dur >= S_HERE) setHue(190, 255); else setRGB(v / 4, v * 3 / 5, v);   // 소리 = 빛 (HERE 길이가 되면 청록)
+  if (dur >= S_HERE) setHue(190, 255); else soundColor(sEnv, now);   // 소리 세기 = 무지개빛 (HERE 길이가 되면 청록)
   rgbHoldUntil = now + 150;
   if (dur >= S_DOT_MAX) { digitalWrite(DOT_LED, LOW); digitalWrite(DASH_LED, HIGH); }   // 대시 길이가 되면 빨강 LED
   if (sEnv < thOff) { if (!sBelow) sBelow = now; } else sBelow = 0;
-  if (sBelow && now - sBelow > S_HANG) {          // 0.25초 넘게 조용 = 끝
+  unsigned long hang = (sBelow && sBelow - sStart < TAP_MAX) ? 60 : S_HANG;   // 톡: 금방 끝 · 숨·목소리: 0.25초 기다림
+  if (sBelow && now - sBelow > hang) {          // 조용해지면 끝
     sOn = false; sEnv = 0;
     unsigned long len = sBelow - sStart;
     digitalWrite(DOT_LED, LOW); digitalWrite(DASH_LED, LOW); setRGB(0, 0, 0);
-    if (len < 30) return true;                    // 아주 짧은 잡음만 무시 (쿵·짝 같은 짧은 소리는 점이 돼요)
+    if (len < 15) return true;                    // 아주 짧은 잡음만 무시
+    if (len < TAP_MAX) {                          // 톡·쿵·짝 = '톡' 한 번 (묶어서 셉니다)
+      tapCount++; tapLast = now;
+      setHue(50, 180); rgbHoldUntil = now + 80;
+      return true;
+    }
     Serial.print(F("\n[소리] ")); Serial.print(len / 1000.0, 2); Serial.print(F("초 → "));
     if (len >= S_HERE) {
       Serial.println(F("아주 길게 = HERE"));
@@ -919,6 +971,7 @@ void setup() {
   Serial.println(F("멜로디: star · bell · plane · scale · jingle · silent 입력 (stop 또는 버튼 = 멈춤), 또는 play CCGGAAG- (C=도 D=레 E=미 F=파 G=솔 A=라 B=시)"));
   if (USE_MIC) Serial.println(F("소리 센서: miclevel = 소리 크기 보기"));
   if (USE_MIC && BREATH_SOS) Serial.println(F("숨·목소리·박수로 치기: 짧게 = 점 · 0.6초 넘게 = 대시 · 2.5초 넘게 = HERE (mic = 켜기/끄기)"));
+  if (USE_MIC && BREATH_SOS) Serial.println(F("톡톡 치기: 톡 1번 = 점 · 톡톡 2번 = 대시 · 5번 넘게 빠르게 = 긴급 SOS"));
   if (USE_RGB) Serial.println(F("RGB 라이트: 글자마다 새 색 · 음마다 무지개색 · rgb = 무지개 점검"));
 }
 
