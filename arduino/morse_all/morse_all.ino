@@ -104,7 +104,10 @@ void buzzerHW(int f) {
   int vol = volumeNow();
   if (!BUZZER_ON || vol <= 0) { timerStop(); return; }   // 소리 0 = 조용
   unsigned long period = 2000000UL / f;
-  unsigned long on = period * (23 + constrain(vol, 1, 10) * 27 / 10) / 100;   // 1 = 26% · 10 = 50% (가장 큰 소리)
+  // 한 칸에 소리가 약 3dB씩 바뀌게: 10 = 가장 큰 소리(50%), 1 = 아주 작게(약 1.4%)
+  float amp = pow(10.0, (constrain(vol, 1, 10) - 10) * 3.0 / 20.0);
+  unsigned long on = (unsigned long)(period * asin(amp) / PI);
+  if (on < 8) on = 8;
   noInterrupts();
   onTicks = on - 1;
   offTicks = period - on - 1;
