@@ -949,5 +949,18 @@ document.getElementById('copy').addEventListener('click',function(){
 });
 })();
 </script>
+
+<div class="scroll-btns" role="group" aria-label="페이지 이동"><button type="button" id="toTop" aria-label="맨 위로" title="맨 위로">↑</button><button type="button" id="toBottom" aria-label="맨 아래로" title="맨 아래로">↓</button></div>
+<style>
+.scroll-btns{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;z-index:30}
+.scroll-btns button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:color-mix(in srgb,var(--surface,var(--card)) 88%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:var(--ink,var(--fg));font-size:18px;line-height:1;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.08);transition:background .15s,color .15s}
+.scroll-btns button:hover{background:var(--ink,var(--fg));color:var(--bg)}
+.scroll-btns button:focus-visible{outline:2px solid var(--ink,var(--fg));outline-offset:2px}
+@media print{.scroll-btns{display:none}}
+</style>
+<script>
+document.getElementById('toTop').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
+document.getElementById('toBottom').onclick=()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'});
+</script>
 </body>
 </html>
