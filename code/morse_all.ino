@@ -28,6 +28,7 @@ const int BUZZER_PIN2 = 9;  // (최대 소리) 부저 − 다리를 GND 대신 9
 const int KNOB_PIN   = A0;
 const int RGB_R = 10, RGB_G = 11, RGB_B = 12;   // RGB 라이트 R·G·B (GND는 파란 − 줄)
 const int MIC_PIN = A1;                          // 소리 센서 AO
+const bool MIC_DIRECT = true;   // 소리 센서를 아두이노 A1~A4에 바로 꽂았을 때: A2 = GND, A3 = 5V로 전기를 줘요 (판에 꽂았어도 상관없어요)
 
 // ---------- 설정 (여기만 바꾸면 됨) ----------
 const bool USE_KNOB      = true;  // 회전 센서(A0)로 소리 크기 조절. 센서가 없으면 false
@@ -837,6 +838,11 @@ void setup() {
   pinMode(LETTER_LED, OUTPUT);
   soundSetup();
   rgbSetup();
+  if (USE_MIC && MIC_DIRECT) {                 // 소리 센서 바로 꽂기: AO=A1 · G=A2 · +=A3 · DO=A4
+    pinMode(A2, OUTPUT); digitalWrite(A2, LOW);
+    pinMode(A3, OUTPUT); digitalWrite(A3, HIGH);
+    pinMode(A4, INPUT);
+  }
   if (USE_RGB) { setRGB(255, 0, 0); delay(250); setRGB(0, 255, 0); delay(250); setRGB(0, 0, 255); delay(250); setRGB(0, 0, 0); }   // 점검: 빨 → 초 → 파
   Serial.begin(9600);
 
