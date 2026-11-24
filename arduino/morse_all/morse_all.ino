@@ -23,7 +23,7 @@ const int DASH_BUTTON_PIN = 3;  // 대시 버튼 (두 번째 버튼, 다른 쪽 
 const int DOT_LED    = 5;   // 노랑 = 점 (서서히 밝아지기 가능)
 const int DASH_LED   = 6;   // 빨강 = 대시 (서서히 밝아지기 가능)
 const int LETTER_LED = 7;   // 초록 = 글자 확정
-const int BUZZER_PIN = 8;
+const int SPEAKER_PIN = 11;  // 부저 + 다리 (예전 8번 → 11번으로 옮겨요)
 const int KNOB_PIN   = A0;
 
 // ---------- 설정 (여기만 바꾸면 됨) ----------
@@ -31,7 +31,7 @@ const bool USE_KNOB      = true;  // 회전 센서(A0)로 소리 크기 조절. 
 const bool BUZZER_ON     = true;  // false면 부저는 조용 (소리는 웹사이트에서만)
 const bool BUZZER_ACTIVE = false; // 음 높이가 안 바뀌는 부저(능동 부저)면 true
 const bool TWO_BUTTONS   = true;  // 버튼 2개: 2번 = 점, 3번 = 대시(꾹). false면 버튼 1개로 짧게/길게
-const int  SOUND_STYLE   = 1;     // 소리: 0 = 삐(기본) · 1 = 하프·피아노처럼 띵~ · 2 = 화음(도·미·솔)
+const int  SOUND_STYLE   = 1;     // 소리: 0 = 삐 · 1 = 하프 · 2 = 피아노 · 3 = 화음(도·미·솔)
 const int  VOLUME        = 5;     // 소리 크기: 1(아주 작게) ~ 10(가장 크게). 회전 센서를 쓰면 센서가 정해요
 const int  BASE_FREQ     = 660;   // 모스부호기 소리 높이 (Hz)
 
@@ -73,76 +73,104 @@ char decode(const String& code) {
 }
 
 // =============================================================
-//  소리: 타이머1이 정확한 박자로 부저를 울려요 (음이 흔들리지 않게)
+//  소리: 아두이노가 1초에 16000번 계산해서 "줄을 튕기는 소리"를 만들어요
+//  (Karplus-Strong 방식). 부저 + 다리는 11번 핀에 꽂아요.
 // =============================================================
-volatile uint16_t onTicks = 0, offTicks = 0;
-volatile bool phaseOn = false;
+#define SR      16000      // 1초에 계산하는 횟수
+#define VOICES  3          // 동시에 울릴 수 있는 줄 수 (화음용)
+#define MAXN    150        // 가장 낮은 음 ≈ 16000 / 150 = 107Hz
 
-ISR(TIMER1_COMPA_vect) {               // 부저 = 8번 핀 = PB0
-  if (phaseOn) { PORTB &= ~_BV(0); phaseOn = false; OCR1A = offTicks; }
-  else         { PORTB |=  _BV(0); phaseOn = true;  OCR1A = onTicks;  }
-}
-// 소리 내기 (level: 0~1000 = 그 순간의 크기)
+volatile int8_t  vbuf[VOICES][MAXN];
+volatile uint8_t vlen[VOICES], vidx[VOICES], vDamp[VOICES];
+volatile bool    vOn[VOICES];
+volatile uint8_t outVol = 5;
+volatile bool    beepOn = false;
+volatile uint16_t beepInc = 0, beepPhase = 0;
+uint8_t  nextVoice = 0;
+uint16_t rnd = 0xACE1;
+
 int knobVolume = VOLUME;     // 회전 센서가 정한 소리 크기 (0~10)
 int volumeNow() { return USE_KNOB ? knobVolume : VOLUME; }
 
-void timerStop() {
-  noInterrupts();
-  TIMSK1 &= ~_BV(OCIE1A);
-  TCCR1B = 0;
-  phaseOn = false;
-  PORTB &= ~_BV(0);
-  interrupts();
-}
+int8_t noise() { rnd ^= rnd << 7; rnd ^= rnd >> 9; rnd ^= rnd << 8; return (int8_t)(rnd & 0xFF); }
 
-void buzzerHW(int f, int level) {
-  int vol = volumeNow();
-  if (!BUZZER_ON || vol <= 0) { timerStop(); return; }   // 소리 0 = 조용
-  unsigned long period = 2000000UL / f;
-  unsigned long on = period * (6 + constrain(vol, 1, 10) * 4) / 100 * level / 1000;
-  if (on < 4) on = 4;
-  if (on > period - 4) on = period - 4;
-  noInterrupts();
-  onTicks = on - 1;
-  offTicks = period - on - 1;
-  if (!(TIMSK1 & _BV(OCIE1A))) {
-    TCCR1A = 0;
-    TCCR1B = _BV(WGM12) | _BV(CS11);
-    TCNT1 = 0;
-    phaseOn = true; PORTB |= _BV(0);
-    OCR1A = onTicks;
-    TIFR1 = _BV(OCF1A);
-    TIMSK1 |= _BV(OCIE1A);
+ISR(TIMER1_COMPA_vect) {
+  int16_t s = 0;
+  for (uint8_t v = 0; v < VOICES; v++) {
+    if (!vOn[v]) continue;
+    uint8_t i = vidx[v], j = i + 1;
+    if (j >= vlen[v]) j = 0;
+    int16_t a = vbuf[v][i], b = vbuf[v][j];
+    s += a;
+    vbuf[v][i] = (int8_t)((((a + b) >> 1) * (int16_t)vDamp[v]) >> 8);   // 줄이 조금씩 잦아들어요
+    vidx[v] = j;
   }
+  if (beepOn) { beepPhase += beepInc; s += (beepPhase & 0x8000) ? 45 : -45; }
+  s = (s * (int16_t)outVol) >> 3;
+  if (s > 127) s = 127;
+  if (s < -127) s = -127;
+  OCR2A = (uint8_t)(s + 128);
+}
+
+void soundSetup() {
+  pinMode(SPEAKER_PIN, OUTPUT);
+  if (BUZZER_ACTIVE) return;
+  TCCR2A = _BV(COM2A1) | _BV(WGM21) | _BV(WGM20);   // 11번 핀: 아주 빠른 PWM (62.5kHz, 안 들려요)
+  TCCR2B = _BV(CS20);
+  OCR2A = 128;
+  TCCR1A = 0;                                         // 타이머1: 1초에 16000번 계산
+  TCCR1B = _BV(WGM12) | _BV(CS10);
+  OCR1A = 16000000UL / SR - 1;
+  TIMSK1 |= _BV(OCIE1A);
+  outVol = BUZZER_ON ? volumeNow() : 0;
+}
+
+// 줄 하나 튕기기
+void pluck(int f, uint8_t amp, bool bright) {
+  uint16_t n = SR / f;
+  if (n > MAXN) n = MAXN;
+  if (n < 4) n = 4;
+  int8_t tmp[MAXN];
+  int16_t prev = 0;
+  for (uint16_t i = 0; i < n; i++) {
+    int16_t x = (int16_t)noise() * amp / 128;
+    if (!bright) { x = (x + prev) / 2; prev = x; }      // 하프: 부드럽게
+    tmp[i] = (int8_t)x;
+  }
+  uint8_t v = nextVoice; nextVoice = (nextVoice + 1) % VOICES;
+  noInterrupts();
+  vOn[v] = false;
+  for (uint16_t i = 0; i < n; i++) vbuf[v][i] = tmp[i];
+  vlen[v] = n; vidx[v] = 0;
+  vDamp[v] = bright ? 255 : 254;                          // 피아노: 더 오래 · 하프: 조금 빨리
+  vOn[v] = true;
   interrupts();
 }
 
-// 음색: 소리가 난 뒤 시간이 지나면서 크기·높이를 조금씩 바꿔요
 bool noteActive = false;
-int  noteBase = 0;
-unsigned long noteStart = 0, lastUpdate = 0;
-
-void buzzerOn(int f) {
-  if (BUZZER_ACTIVE) { if (BUZZER_ON && volumeNow() > 0) digitalWrite(BUZZER_PIN, HIGH); return; }
-  noteBase = f; noteStart = millis(); noteActive = true;
-  buzzerHW(f, 1000);
+void buzzerOn(int f) {                                     // 소리 시작
+  if (BUZZER_ACTIVE) { if (BUZZER_ON && volumeNow() > 0) digitalWrite(SPEAKER_PIN, HIGH); return; }
+  noteActive = true;
+  if (SOUND_STYLE == 0) { noInterrupts(); beepInc = (uint32_t)f * 65536UL / SR; beepOn = true; interrupts(); }
+  else if (SOUND_STYLE == 1) pluck(f, 110, false);                      // 하프
+  else if (SOUND_STYLE == 2) pluck(f, 120, true);                       // 피아노
+  else { pluck(f, 80, false); pluck(f * 5 / 4, 70, false); pluck(f * 3 / 2, 70, false); }   // 화음 (도·미·솔)
 }
-
-// 계속 불러 주면 하프·화음 소리가 만들어져요
-void updateSound() {
-  if (!noteActive || BUZZER_ACTIVE || SOUND_STYLE == 0) return;
-  unsigned long now = millis();
-  if (now - lastUpdate < 4) return;
-  lastUpdate = now;
-  unsigned long t = now - noteStart;
-  int level = 130 + (int)(870.0 * exp(-(float)t / 320.0));    // 띵~ 하고 줄어드는 소리
-  int f = noteBase;
-  if (SOUND_STYLE == 2) {                                       // 화음: 도·미·솔을 빠르게 번갈아
-    const float R[3] = { 1.0, 1.26, 1.5 };
-    f = (int)(noteBase * R[(t / 35) % 3]);
-  }
-  buzzerHW(f, level);
+void noteRelease() {                                       // 손을 뗐을 때: 삐는 멈추고, 줄 소리는 자연스럽게 잦아들어요
+  noteActive = false;
+  if (BUZZER_ACTIVE) { digitalWrite(SPEAKER_PIN, LOW); return; }
+  beepOn = false;
 }
+void buzzerOff() {                                         // 즉시 모두 끄기 (임계점 끊김, 여백)
+  noteActive = false;
+  if (BUZZER_ACTIVE) { digitalWrite(SPEAKER_PIN, LOW); return; }
+  noInterrupts();
+  beepOn = false;
+  for (uint8_t v = 0; v < VOICES; v++) vOn[v] = false;
+  interrupts();
+}
+void updateSound() {}                                      // (예전 코드와 맞추려고 남겨 둠)
+void soundDelay(unsigned long ms) { delay(ms); }
 
 // 회전 센서: 돌리면 소리 크기가 바뀌고, Serial Monitor에 숫자와 막대로 보여줘요
 int lastKnobRaw = -100;
@@ -167,24 +195,7 @@ void readKnob() {
   if (v == knobVolume) return;
   knobVolume = v;
   printKnob(raw);
-  if (noteActive) buzzerHW(noteBase, 1000);          // 울리는 중이면 바로 반영
-}
-
-// delay 대신: 기다리는 동안에도 음색을 계속 만들어요
-void soundDelay(unsigned long ms) {
-  unsigned long s = millis();
-  while (millis() - s < ms) updateSound();
-}
-
-void buzzerOff() {
-  noteActive = false;
-  if (BUZZER_ACTIVE) { digitalWrite(BUZZER_PIN, LOW); return; }
-  noInterrupts();
-  TIMSK1 &= ~_BV(OCIE1A);
-  TCCR1B = 0;
-  phaseOn = false;
-  PORTB &= ~_BV(0);
-  interrupts();
+  outVol = BUZZER_ON ? knobVolume : 0;               // 바로 반영
 }
 
 void allOff() {
@@ -226,7 +237,7 @@ void setLevel(int pin, int v) {
 }
 void setLetter(bool on) { if (stopNow) return; letterOn = on; digitalWrite(LETTER_LED, on ? HIGH : LOW); }
 void sound(int f) { if (stopNow) return; soundFreq = f; buzzerOn(f); }
-void quiet()      { soundFreq = 0; buzzerOff(); }
+void quiet()      { soundFreq = 0; noteRelease(); }
 
 // 버튼: 잠깐 누르고 있으면 멈춤(여백), 3초 넘게 누르면 끄기. 멈춘 시간(ms)을 돌려줘요.
 bool anyDown() { return digitalRead(BUTTON_PIN) == LOW || (TWO_BUTTONS && digitalRead(DASH_BUTTON_PIN) == LOW); }
@@ -325,7 +336,7 @@ void runStillHere() {
     Serial.println(F("  [임계점]"));
     setLevel(DOT_LED, 255); setLevel(DASH_LED, 255); setLetter(true);
     for (int i = 0; i <= 40 && !stopNow; i++) { sound(1319 + (2400 - 1319) * (long)i / 40); wait(30); }
-    setLevel(DOT_LED, 0); setLevel(DASH_LED, 0); setLetter(false); quiet();
+    setLevel(DOT_LED, 0); setLevel(DASH_LED, 0); setLetter(false); buzzerOff();   // 한순간에 끊김
   }
   if (!stopNow) { Serial.println(F("[3] 정적")); wait(STILL_1MIN ? 5000 : 8000); }
   if (!stopNow) {
@@ -365,7 +376,7 @@ unsigned long letterGapNow() { return constrain(avgGap * 3, 350UL, LETTER_GAP); 
 
 int currentFreq() { return BASE_FREQ; }
 void soundOn(int f) { buzzerOn(f); lastFreq = f; }
-void soundOff()     { buzzerOff(); }
+void soundOff()     { noteRelease(); }
 
 void sendText(String text) {
   text.toUpperCase();
@@ -527,20 +538,21 @@ void setup() {
   pinMode(DOT_LED, OUTPUT);
   pinMode(DASH_LED, OUTPUT);
   pinMode(LETTER_LED, OUTPUT);
-  pinMode(BUZZER_PIN, OUTPUT);
+  soundSetup();
   Serial.begin(9600);
 
   int leds[3] = {DOT_LED, DASH_LED, LETTER_LED};       // 점검: 노랑 → 빨강 → 초록
   for (int i = 0; i < 3; i++) { digitalWrite(leds[i], HIGH); delay(300); digitalWrite(leds[i], LOW); }
   int testFreq[3] = {440, 660, 880};                    // 점검: 낮은 음 → 높은 음
-  for (int i = 0; i < 3; i++) { buzzerOn(testFreq[i]); soundDelay(260); buzzerOff(); delay(60); }
+  for (int i = 0; i < 3; i++) { buzzerOn(testFreq[i]); delay(320); noteRelease(); }
+  delay(500);
 
   Serial.println(F("=== 모스부호기 준비 완료 ==="));
   if (TWO_BUTTONS) Serial.println(F("점 버튼(2번) = 점(.)   대시 버튼(3번) 꾹 = 대시(-)"));
   else Serial.println(F("버튼: 짧게 = 점(.)  길게 = 대시(-)"));
   Serial.println(F("영어/숫자를 입력하고 Enter → 자동 송신"));
   Serial.println(F("STILL HERE: 버튼 3초 꾹 (또는 still 입력)"));
-  if (USE_KNOB) { lastKnobRaw = analogRead(KNOB_PIN); knobVolume = min(10, (lastKnobRaw + 51) / 102); printKnob(lastKnobRaw); }
+  if (USE_KNOB) { lastKnobRaw = analogRead(KNOB_PIN); knobVolume = min(10, (lastKnobRaw + 51) / 102); outVol = BUZZER_ON ? knobVolume : 0; printKnob(lastKnobRaw); }
   Serial.println(F("새 문장: 5초 쉬기 (또는 new 입력)"));
 }
 

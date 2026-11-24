@@ -3,243 +3,216 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>모스부호기 웹</title>
-<meta name="description" content="버튼으로 모스부호를 치면 하프·피아노 소리로 울리는 웹 모스부호기. 아두이노와 연결하거나 STILL HERE 작업을 감상할 수 있어요.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<title>Morse — 모스부호기</title>
+<meta name="description" content="점과 대시로 치면 하프·피아노 소리로 울리는 모스부호기. 아두이노 연결, STILL HERE.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#F5F3EE;--surface:#FFFFFF;--surface2:#EFECE5;--ink:#1B1F1E;--muted:#6A6F6C;--line:#DEDAD1;
-  --accent:#0F6E6A;--yellow:#F2C230;--red:#E0483C;--green:#2FA35A;--stage:#0B0C0D;
-  --mono:'IBM Plex Mono',ui-monospace,monospace;--sans:'IBM Plex Sans KR',system-ui,sans-serif;
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#121514;--surface:#1A1E1D;--surface2:#232827;--ink:#ECEDEA;--muted:#9AA19E;--line:#2F3533;--accent:#4FC2BB;
-}}
-:root[data-theme="dark"]{--bg:#121514;--surface:#1A1E1D;--surface2:#232827;--ink:#ECEDEA;--muted:#9AA19E;--line:#2F3533;--accent:#4FC2BB}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;-webkit-tap-highlight-color:transparent}
-a{color:var(--accent)}
-.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
-header.top{padding:28px 0 8px}
-.kicker{font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:var(--muted);margin:0}
-h1{font-size:clamp(28px,5vw,42px);margin:4px 0 6px;letter-spacing:-.01em}
-.lede{color:var(--muted);margin:0 0 14px;max-width:720px}
-nav.toc{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px}
-nav.toc a{font-size:13.5px;text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--line);padding:5px 12px;border-radius:999px}
-nav.toc a:hover{border-color:var(--accent)}
-section.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;margin:18px 0}
-h2{font-size:22px;margin:0 0 4px}
-.sub{color:var(--muted);margin:0 0 14px;font-size:14.5px}
-
-/* LEDs + screen */
-.panel{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center}
-@media (max-width:720px){.panel{grid-template-columns:1fr}}
-.leds{display:flex;gap:18px;justify-content:center}
-.led{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
-.led i{width:46px;height:46px;border-radius:50%;background:var(--c);opacity:.18;transition:opacity .06s,box-shadow .06s;box-shadow:0 0 0 0 var(--c)}
-.led.on i{opacity:1;box-shadow:0 0 22px 6px color-mix(in srgb,var(--c) 70%,transparent)}
-.screen{background:#0E1110;color:#E9E4D8;border-radius:12px;padding:14px 16px;min-height:118px;font-family:var(--mono)}
-.screen .msg{font-size:clamp(22px,4.5vw,34px);letter-spacing:.06em;min-height:1.3em;word-break:break-all}
-.screen .msg .q{color:#FF8A7A}
-.screen .cur{display:flex;gap:12px;align-items:baseline;min-height:1.6em;margin-top:4px}
-.screen .code{font-size:22px;color:#F2C230;letter-spacing:.12em}
-.screen .hint{font-size:13px;color:#FF9F8F;font-family:var(--sans)}
-.screen .hist{font-size:12.5px;color:#8C928E;margin-top:6px;min-height:1.2em}
-.gap{margin-top:10px}
-.gap .bar{position:relative;height:8px;border-radius:99px;background:#252A28;overflow:hidden}
-.gap .bar b{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#2FA35A,#F2C230 40%,#E0483C)}
-.gap .lab{display:flex;justify-content:space-between;font-size:11px;color:#8C928E;margin-top:3px;font-family:var(--sans)}
-
-.keys{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 10px}
-.key{user-select:none;-webkit-user-select:none;touch-action:none;border:0;border-radius:18px;padding:22px 10px;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:#1B1F1E;transition:transform .05s,filter .1s;box-shadow:0 4px 0 rgba(0,0,0,.18)}
-.key .big{font-size:44px;line-height:1;font-weight:700}
-.key small{font-size:14px}
-.key kbd{font-family:var(--mono);font-size:11.5px;background:rgba(255,255,255,.55);padding:1px 7px;border-radius:5px;margin-top:4px}
-.key.dot{background:#F7D35E}.key.dash{background:#F2897D}
-.key.down{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.18);filter:brightness(.93)}
-.key.single{grid-column:1/-1;background:#E9E4D8}
-.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.btn{font:inherit;font-size:14.5px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);padding:8px 14px;border-radius:10px;cursor:pointer}
-.btn:hover{border-color:var(--accent)}
-.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:14px}
-.opt{background:var(--surface2);border-radius:12px;padding:12px}
-.opt h3{font-size:13px;margin:0 0 8px;color:var(--muted);font-weight:600}
-.seg{display:flex;flex-wrap:wrap;gap:6px}
-.seg label{cursor:pointer}
-.seg input{position:absolute;opacity:0;pointer-events:none}
-.seg span{display:inline-block;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:14px}
-.seg input:checked+span{background:var(--accent);color:#fff;border-color:var(--accent)}
-.seg input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
-input[type=range]{width:100%;accent-color:var(--accent)}
-.vol{display:flex;align-items:center;gap:10px}
-.vol output{font-family:var(--mono);min-width:3.5em;text-align:right}
-.note{font-size:13.5px;color:var(--muted)}
-
-/* send */
-.send{display:flex;gap:8px}
-.send input{flex:1;font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);text-transform:uppercase}
-.sendcode{font-family:var(--mono);font-size:15px;margin-top:10px;min-height:1.4em;word-break:break-all;color:var(--muted)}
-.sendcode b{color:var(--ink)}
-
-/* STILL HERE */
-.stage{position:relative;border-radius:12px;overflow:hidden;background:var(--stage);aspect-ratio:16/9;touch-action:none;user-select:none}
+:root{--bg:#FAFAF8;--fg:#111111;--mid:#6B6B6B;--soft:#A3A3A0;--line:#E7E6E2;--fill:#F1F0EC;--card:#FFFFFF;
+--y:#F5B800;--r:#F0432C;--g:#1FAA59;--acc:#111111;--sans:'Pretendard Variable',Pretendard,-apple-system,system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0E0E0D;--fg:#F2F2EF;--mid:#9A9A96;--soft:#5E5E5B;--line:#232321;--fill:#181817;--card:#141413;--acc:#F2F2EF}}
+:root[data-theme=dark]{--bg:#0E0E0D;--fg:#F2F2EF;--mid:#9A9A96;--soft:#5E5E5B;--line:#232321;--fill:#181817;--card:#141413;--acc:#F2F2EF}
+*{box-sizing:border-box}html{scroll-behavior:smooth}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.6;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+a{color:inherit}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px}
+/* 상단 */
+.nav{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:56px;gap:16px}
+.logo{font-family:var(--mono);font-weight:600;letter-spacing:.02em;text-decoration:none;display:flex;align-items:center;gap:10px}
+.logo i{display:inline-block;background:var(--fg);border-radius:99px;height:6px}
+.nav ul{display:flex;gap:2px;list-style:none;margin:0;padding:0;overflow-x:auto;scrollbar-width:none}
+.nav ul a{display:block;padding:6px 10px;border-radius:8px;text-decoration:none;color:var(--mid);font-size:14px;white-space:nowrap}
+.nav ul a:hover{color:var(--fg);background:var(--fill)}
+@media (max-width:640px){.nav .wrap{height:auto;flex-direction:column;align-items:flex-start;padding-top:10px;padding-bottom:6px;gap:4px}.nav ul{width:100%}}
+section{padding:56px 0;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--mono);font-size:12px;color:var(--soft);letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px}
+h1{font-size:clamp(30px,5vw,44px);line-height:1.15;letter-spacing:-.03em;margin:0 0 10px;font-weight:700}
+h2{font-size:24px;letter-spacing:-.02em;margin:0 0 6px;font-weight:700}
+.lead{color:var(--mid);margin:0 0 28px;max-width:560px}
+/* 치기 */
+.display{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px}
+.leds{display:flex;gap:18px;align-items:center;margin-bottom:18px}
+.led{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--mid)}
+.led i{width:12px;height:12px;border-radius:50%;background:var(--c);opacity:.18;transition:opacity .05s,box-shadow .05s}
+.led.on i{opacity:1;box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 22%,transparent),0 0 18px var(--c)}
+.msg{font-family:var(--mono);font-size:clamp(30px,6vw,52px);font-weight:500;letter-spacing:.08em;min-height:1.3em;line-height:1.25;word-break:break-all}
+.msg .q{color:var(--r)}.msg .cursor{opacity:.25;animation:bl 1s steps(1) infinite}@keyframes bl{50%{opacity:0}}
+.cur{display:flex;gap:14px;align-items:baseline;min-height:30px;margin-top:6px}
+.code{font-family:var(--mono);font-size:22px;letter-spacing:.2em;color:var(--y)}
+.hint{font-size:13px;color:var(--r)}
+.gap{margin-top:14px}.gap .bar{height:3px;background:var(--fill);border-radius:9px;overflow:hidden}.gap .bar b{display:block;height:100%;width:0;background:var(--fg);opacity:.55}
+.gap .lab{display:flex;justify-content:space-between;font-size:11px;color:var(--soft);margin-top:6px;font-family:var(--mono)}
+.hist{font-size:12.5px;color:var(--soft);margin-top:8px;min-height:1.2em}
+.keys{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 0}
+.key{user-select:none;-webkit-user-select:none;touch-action:none;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:20px;height:140px;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;transition:transform .06s,background .1s,border-color .1s}
+.key:hover{border-color:var(--soft)}
+.key .sym{display:block;background:var(--fg)}
+.key.dot .sym{width:18px;height:18px;border-radius:50%}.key.dash .sym{width:58px;height:14px;border-radius:9px}
+.key.single .sym{width:22px;height:22px;border-radius:50%}
+.key small{font-size:13px;color:var(--mid)}.key kbd{font-family:var(--mono);font-size:11px;color:var(--soft);border:1px solid var(--line);padding:0 6px;border-radius:5px;margin-left:4px}
+.key.down{transform:scale(.985);background:var(--fill)}
+.key.dot.down .sym{background:var(--y)}.key.dash.down .sym{background:var(--r)}
+.key.single{grid-column:1/-1}
+.toolbar{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-end;margin-top:22px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field>span{font-size:12px;color:var(--soft)}
+.seg{display:inline-flex;background:var(--fill);border-radius:10px;padding:3px;flex-wrap:wrap}
+.seg label{cursor:pointer}.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:block;padding:5px 11px;border-radius:8px;font-size:13.5px;color:var(--mid)}
+.seg input:checked+span{background:var(--card);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.seg input:focus-visible+span{outline:2px solid var(--fg)}
+.vol{display:flex;align-items:center;gap:10px;min-width:180px}.vol output{font-family:var(--mono);font-size:13px;color:var(--mid);min-width:3em}
+input[type=range]{width:100%;accent-color:var(--fg)}
+.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:9px 16px;border-radius:10px;cursor:pointer}
+.btn:hover{border-color:var(--soft)}.btn.primary{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.note{font-size:13px;color:var(--soft)}
+code{font-family:var(--mono);font-size:.9em;background:var(--fill);padding:1px 6px;border-radius:5px}
+/* 보내기 */
+.send{display:flex;gap:8px;max-width:560px}
+.send input{flex:1;font:inherit;font-family:var(--mono);font-size:18px;letter-spacing:.06em;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--fg);text-transform:uppercase}
+.send input:focus{outline:none;border-color:var(--fg)}
+.sendcode{font-family:var(--mono);font-size:16px;margin-top:14px;min-height:1.5em;letter-spacing:.08em;color:var(--soft);word-break:break-all}.sendcode b{color:var(--fg)}
+/* STILL */
+.stage{position:relative;border-radius:20px;overflow:hidden;background:#000;aspect-ratio:16/9;touch-action:none;user-select:none}
 .stage canvas{width:100%;height:100%;display:block}
-.stage .hold{position:absolute;inset:auto 0 10px 0;text-align:center;color:#8C928E;font-size:12.5px;pointer-events:none}
-.stage .paused{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#E9E4D8;font-family:var(--mono);letter-spacing:.3em;font-size:14px}
+.stage .hold{position:absolute;inset:auto 0 14px 0;text-align:center;color:#777;font-size:12.5px;pointer-events:none}
+.stage .paused{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#ddd;font-family:var(--mono);letter-spacing:.4em;font-size:13px}
 .stage.is-paused .paused{display:flex}
-
-/* arduino */
-.ard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
-.status{font-family:var(--mono);font-size:13.5px;padding:6px 10px;border-radius:8px;background:var(--surface2);display:inline-block}
-.status.ok{background:color-mix(in srgb,var(--green) 18%,var(--surface2))}
-.knob{display:flex;align-items:center;gap:16px;margin:12px 0}
-.knob svg{width:120px;height:120px;flex:none}
-.knob .val{font-family:var(--mono);font-size:30px;font-weight:600}
-.knob .raw{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
-.meter{display:flex;gap:3px;margin-top:6px}
-.meter i{width:14px;height:20px;border-radius:3px;background:var(--surface2);border:1px solid var(--line)}
-.meter i.on{background:var(--accent);border-color:var(--accent)}
-pre.log{background:#0E1110;color:#C9D1CC;border-radius:10px;padding:10px 12px;font-size:12.5px;height:180px;overflow:auto;margin:10px 0 0;white-space:pre-wrap}
-ol.steps{padding-left:20px;margin:6px 0}
-ol.steps li{margin:4px 0}
-code{font-family:var(--mono);font-size:.92em;background:var(--surface2);padding:1px 5px;border-radius:5px}
-
-/* table */
-.mtab{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px}
-.mtab div{background:var(--surface2);border-radius:8px;padding:6px 10px;font-family:var(--mono);display:flex;gap:10px;align-items:center}
-.mtab b{font-size:16px;min-width:1em}
-.mtab span{letter-spacing:.15em;color:var(--accent)}
-footer{color:var(--muted);font-size:13px;padding:20px 0 40px}
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+/* 아두이노 */
+.ard{display:grid;grid-template-columns:1fr 1fr;gap:28px}@media (max-width:760px){.ard{grid-template-columns:1fr}}
+.status{font-family:var(--mono);font-size:12.5px;color:var(--mid);display:inline-flex;align-items:center;gap:6px}
+.status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--soft)}.status.ok::before{background:var(--g)}
+ol.steps{padding-left:18px;margin:16px 0 0;color:var(--mid)}ol.steps li{margin:6px 0}ol.steps b{color:var(--fg)}
+.knob{display:flex;align-items:center;gap:20px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px}
+.knob svg{width:110px;height:110px;flex:none}
+.knob .val{font-family:var(--mono);font-size:34px;font-weight:600;line-height:1}
+.knob .raw{font-family:var(--mono);font-size:12px;color:var(--soft);margin-top:6px}
+.meter{display:flex;gap:3px;margin-top:10px}.meter i{width:12px;height:16px;border-radius:3px;background:var(--fill)}.meter i.on{background:var(--fg)}
+pre.log{background:var(--fill);color:var(--mid);border-radius:14px;padding:12px 14px;font-family:var(--mono);font-size:12px;height:160px;overflow:auto;margin:14px 0 0;white-space:pre-wrap}
+/* 모스부호 표 */
+.tlabel{font-family:var(--mono);font-size:12px;color:var(--soft);letter-spacing:.08em;margin:0 0 10px}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px;margin-bottom:28px}
+.mc{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 14px 12px;display:flex;flex-direction:column;align-items:flex-start;gap:10px;cursor:pointer;text-align:left;transition:border-color .12s,opacity .12s,transform .12s}
+.mc:hover{border-color:var(--soft)}
+.mc b{font-size:30px;line-height:1;font-weight:700;letter-spacing:-.02em}
+.mc .g{display:flex;gap:6px;align-items:center;height:14px}
+.mc .dt{width:10px;height:10px;border-radius:50%;background:var(--fg)}
+.mc .ds{width:28px;height:10px;border-radius:6px;background:var(--fg)}
+.mc small{font-family:var(--mono);font-size:12px;color:var(--soft);letter-spacing:.1em}
+.mc.cand{border-color:var(--y)}.mc.exact{border-color:var(--g);box-shadow:0 0 0 3px color-mix(in srgb,var(--g) 18%,transparent)}
+.mc.dim{opacity:.32}.mc.play{transform:translateY(-2px);border-color:var(--fg)}
+footer{color:var(--soft);font-size:13px;padding:36px 0 56px}
 </style>
 </head>
 <body>
-<header class="top wrap">
-  <p class="kicker">영상프로그래밍방법론 · 11주차 · MORSE</p>
-  <h1>모스부호기 <span style="color:var(--accent)">웹</span></h1>
-  <p class="lede">점 버튼과 대시 버튼으로 모스부호를 치면 하프·피아노 소리로 울려요. 아두이노를 연결하면 진짜 버튼으로 친 것도 여기서 소리 나고, 회전 센서 값도 보여요.</p>
-  <nav class="toc">
-    <a href="#key">치기</a><a href="#send">보내기</a><a href="#still">STILL HERE</a><a href="#arduino">아두이노 연결</a><a href="#table">모스부호 표</a><a href="guide/">만들기 가이드</a><a href="guide/guide.pdf" target="_blank" rel="noopener">가이드 PDF</a>
-  </nav>
-</header>
+<nav class="nav"><div class="wrap">
+  <a class="logo" href="#top"><span style="display:flex;gap:4px;align-items:center"><i style="width:6px"></i><i style="width:18px"></i><i style="width:6px"></i></span>Morse</a>
+  <ul><li><a href="#key">치기</a></li><li><a href="#table">표</a></li><li><a href="#send">보내기</a></li><li><a href="#still">STILL HERE</a></li><li><a href="#arduino">아두이노</a></li><li><a href="guide/">가이드</a></li><li><a href="guide/guide.pdf" target="_blank" rel="noopener">PDF</a></li></ul>
+</div></nav>
 
-<main class="wrap">
-<!-- ===================== 치기 ===================== -->
-<section class="card" id="key">
-  <h2>치기</h2>
-  <p class="sub">점은 누르는 순간 바로, 대시는 <b>꾹(0.25초 넘게)</b> 눌러야 쳐져요. 글자가 끝나면 손을 떼고 <b>초록 불</b>이 깜빡일 때까지 기다려요.</p>
-  <div class="panel">
+<main class="wrap" id="top">
+<section id="key" style="padding-top:44px">
+  <p class="eyebrow">Morse key</p>
+  <h1>점과 대시로 쓰기</h1>
+  <p class="lead">점은 누르는 순간, 대시는 꾹(0.25초). 한 글자가 끝나면 손을 떼고 초록 불을 기다려요.</p>
+  <div class="display" aria-live="polite">
     <div class="leds" aria-hidden="true">
-      <div class="led" id="ledY" style="--c:var(--yellow)"><i></i>점</div>
-      <div class="led" id="ledR" style="--c:var(--red)"><i></i>대시</div>
-      <div class="led" id="ledG" style="--c:var(--green)"><i></i>글자 확정</div>
+      <div class="led" id="ledY" style="--c:var(--y)"><i></i>점</div>
+      <div class="led" id="ledR" style="--c:var(--r)"><i></i>대시</div>
+      <div class="led" id="ledG" style="--c:var(--g)"><i></i>글자 확정</div>
     </div>
-    <div class="screen" aria-live="polite">
-      <div class="msg" id="msg"></div>
-      <div class="cur"><span class="code" id="code"></span><span class="hint" id="hint"></span></div>
-      <div class="gap" aria-hidden="true"><div class="bar"><b id="gapbar"></b></div><div class="lab"><span>손 뗌</span><span id="lgLab">글자 확정</span><span>띄어쓰기 2초</span><span>새 문장 5초</span></div></div>
-      <div class="hist" id="hist"></div>
-    </div>
+    <div class="msg" id="msg"></div>
+    <div class="cur"><span class="code" id="code"></span><span class="hint" id="hint"></span></div>
+    <div class="gap" aria-hidden="true"><div class="bar"><b id="gapbar"></b></div><div class="lab"><span>0</span><span id="lgLab">글자</span><span>띄어쓰기 2s</span><span>새 문장 5s</span></div></div>
+    <div class="hist" id="hist"></div>
   </div>
   <div class="keys" id="keys2">
-    <button class="key dot" id="kDot" aria-label="점 버튼"><span class="big">·</span><small>점</small><kbd>J</kbd></button>
-    <button class="key dash" id="kDash" aria-label="대시 버튼, 꾹 누르기"><span class="big">—</span><small>대시 · 꾹</small><kbd>K</kbd></button>
+    <button class="key dot" id="kDot" aria-label="점 버튼"><span class="sym"></span><small>점<kbd>J</kbd></small></button>
+    <button class="key dash" id="kDash" aria-label="대시 버튼, 꾹 누르기"><span class="sym"></span><small>대시 · 꾹<kbd>K</kbd></small></button>
   </div>
   <div class="keys" id="keys1" hidden>
-    <button class="key single" id="kOne" aria-label="모스 키: 짧게 점, 길게 대시"><span class="big">● </span><small>짧게 = 점 · 길게 = 대시</small><kbd>Space</kbd></button>
+    <button class="key single" id="kOne" aria-label="모스 키: 짧게 점, 길게 대시"><span class="sym"></span><small>짧게 점 · 길게 대시<kbd>Space</kbd></small></button>
   </div>
-  <div class="row"><button class="btn" id="newBtn">새 문장</button><span class="note">키보드: <code>J</code> 점 · <code>K</code> 대시(꾹) · <code>Space</code> 버튼 1개 방식</span></div>
-  <div class="opts">
-    <div class="opt"><h3>소리</h3>
-      <div class="seg" role="radiogroup" aria-label="소리">
-        <label><input type="radio" name="inst" value="harp" checked><span>하프 (녹음)</span></label>
-        <label><input type="radio" name="inst" value="piano"><span>피아노</span></label>
-        <label><input type="radio" name="inst" value="chord"><span>화음</span></label>
-        <label><input type="radio" name="inst" value="box"><span>오르골</span></label>
-        <label><input type="radio" name="inst" value="beep"><span>삐</span></label>
-      </div></div>
-    <div class="opt"><h3>음 높이 (점 · 대시)</h3>
-      <div class="seg" role="radiogroup" aria-label="음 높이">
-        <label><input type="radio" name="pitch" value="low"><span>낮게</span></label>
-        <label><input type="radio" name="pitch" value="mid" checked><span>보통</span></label>
-        <label><input type="radio" name="pitch" value="high"><span>높게</span></label>
-      </div></div>
-    <div class="opt"><h3>볼륨 <span class="note" id="volSrc"></span></h3>
-      <div class="vol"><input type="range" id="vol" min="0" max="10" value="6" aria-label="볼륨"><output id="volOut">6/10</output></div></div>
-    <div class="opt"><h3>버튼 방식</h3>
-      <div class="seg" role="radiogroup" aria-label="버튼 방식">
-        <label><input type="radio" name="mode" value="two" checked><span>버튼 2개</span></label>
-        <label><input type="radio" name="mode" value="one"><span>버튼 1개</span></label>
-      </div></div>
+  <div class="toolbar">
+    <div class="field"><span>소리</span><div class="seg" role="radiogroup" aria-label="소리">
+      <label><input type="radio" name="inst" value="harp" checked><span>하프</span></label>
+      <label><input type="radio" name="inst" value="piano"><span>피아노</span></label>
+      <label><input type="radio" name="inst" value="chord"><span>화음</span></label>
+      <label><input type="radio" name="inst" value="box"><span>오르골</span></label>
+      <label><input type="radio" name="inst" value="beep"><span>삐</span></label></div></div>
+    <div class="field"><span>음 높이</span><div class="seg" role="radiogroup" aria-label="음 높이">
+      <label><input type="radio" name="pitch" value="low"><span>낮게</span></label>
+      <label><input type="radio" name="pitch" value="mid" checked><span>보통</span></label>
+      <label><input type="radio" name="pitch" value="high"><span>높게</span></label></div></div>
+    <div class="field"><span>버튼</span><div class="seg" role="radiogroup" aria-label="버튼 방식">
+      <label><input type="radio" name="mode" value="two" checked><span>2개</span></label>
+      <label><input type="radio" name="mode" value="one"><span>1개</span></label></div></div>
+    <div class="field"><span>볼륨 <span id="volSrc"></span></span><div class="vol"><input type="range" id="vol" min="0" max="10" value="6" aria-label="볼륨"><output id="volOut">6/10</output></div></div>
+    <button class="btn" id="newBtn">새 문장</button>
   </div>
 </section>
 
-<!-- ===================== 보내기 ===================== -->
-<section class="card" id="send">
+<section id="table">
+  <p class="eyebrow">Reference</p>
+  <h2>모스부호 표</h2>
+  <p class="lead">카드를 누르면 소리로 들려줘요. 치는 동안에는 지금까지 친 점·대시로 될 수 있는 글자만 밝게, 딱 맞는 글자는 초록 테두리로 보여요.</p>
+  <div id="mtab"></div>
+</section>
+
+<section id="send">
+  <p class="eyebrow">Transmit</p>
   <h2>보내기</h2>
-  <p class="sub">영어·숫자를 쓰면 모스부호로 바꿔서 빛과 소리로 보내요.</p>
+  <p class="lead">영어·숫자를 쓰면 모스부호로 바꿔 빛과 소리로 보내요.</p>
   <form class="send" id="sendForm"><input id="sendIn" maxlength="40" placeholder="SOS" autocomplete="off" aria-label="보낼 글자"><button class="btn primary">보내기</button></form>
   <div class="sendcode" id="sendCode"></div>
 </section>
 
-<!-- ===================== STILL HERE ===================== -->
-<section class="card" id="still">
+<section id="still">
+  <p class="eyebrow">Work</p>
   <h2>STILL HERE</h2>
-  <p class="sub">신호 → 과잉 → 임계점 → 정적 → 숨. 화면이나 <code>Space</code>를 <b>누르고 있으면</b> 그 자리에서 멈춰요(여백). 소리는 위에서 고른 악기로 나와요.</p>
+  <p class="lead">신호 → 과잉 → 임계점 → 정적 → 숨. 화면이나 <code>Space</code>를 누르고 있으면 그 자리에서 멈춰요(여백).</p>
   <div class="stage" id="stage"><canvas id="cv" width="960" height="540" aria-label="STILL HERE 무대"></canvas><div class="paused">( 여 백 )</div><div class="hold" id="stageHint">▶ 시작을 누르세요</div></div>
-  <div class="row" style="margin-top:12px">
+  <div class="row" style="margin-top:16px">
     <button class="btn primary" id="stillPlay">▶ 시작</button>
-    <div class="seg" role="radiogroup" aria-label="길이">
-      <label><input type="radio" name="slen" value="short" checked><span>1분</span></label>
-      <label><input type="radio" name="slen" value="long"><span>84초</span></label>
-    </div>
-    <span class="note">빛이 깜빡이는 장면이 있어요. 작은 빛만 쓰고 화면 전체가 번쩍이지는 않아요.</span>
+    <div class="seg" role="radiogroup" aria-label="길이"><label><input type="radio" name="slen" value="short" checked><span>1분</span></label><label><input type="radio" name="slen" value="long"><span>84초</span></label></div>
+    <span class="note">작은 빛만 깜빡여요. 화면 전체가 번쩍이지는 않아요.</span>
   </div>
 </section>
 
-<!-- ===================== 아두이노 ===================== -->
-<section class="card" id="arduino">
+<section id="arduino">
+  <p class="eyebrow">Hardware</p>
   <h2>아두이노 연결</h2>
-  <p class="sub">진짜 버튼으로 친 점·대시가 여기서 하프·피아노 소리로 나고, 회전 센서 값이 보여요. <b>Chrome 또는 Edge</b>에서만 돼요.</p>
-  <div class="ard-grid">
+  <p class="lead">진짜 버튼으로 친 점·대시와 회전 센서 값을 여기서 보여줘요. Chrome·Edge에서 돼요.</p>
+  <div class="ard">
     <div>
-      <div class="row"><button class="btn primary" id="connBtn">🔌 아두이노 연결</button><span class="status" id="connStat">연결 안 됨</span></div>
+      <div class="row"><button class="btn primary" id="connBtn">아두이노 연결</button><span class="status" id="connStat">연결 안 됨</span></div>
       <ol class="steps">
-        <li>아두이노에 <a href="arduino/morse_all/morse_all.ino" download>morse_all.ino</a>를 올려요 (Arduino IDE → Upload).</li>
-        <li><b>Arduino IDE의 Serial Monitor를 닫아요.</b> 열려 있으면 여기서 연결이 안 돼요.</li>
-        <li>위 버튼 → 목록에서 <code>usbmodem…</code>(Arduino Uno) 선택 → 연결.</li>
-        <li>부저 소리 없이 웹 소리만 원하면 코드 위쪽 <code>BUZZER_ON</code>을 <code>false</code>로 바꿔 올려요.</li>
+        <li><a href="arduino/morse_all/morse_all.ino" download>morse_all.ino</a>를 아두이노에 올려요.</li>
+        <li><b>Arduino IDE의 Serial Monitor를 닫아요.</b> 열려 있으면 연결이 안 돼요.</li>
+        <li>연결 → 목록에서 <code>usbmodem…</code> 선택.</li>
+        <li>회전 센서 = 소리 크기. 돌리면 오른쪽 숫자가 바뀌어요.</li>
       </ol>
       <p class="note" id="serialNote"></p>
     </div>
     <div>
-      <h3 style="font-size:15px;margin:0">회전 센서 (A0) = 소리 크기</h3>
       <div class="knob">
         <svg viewBox="0 0 120 120" aria-hidden="true">
-          <circle cx="60" cy="60" r="46" fill="none" stroke="var(--line)" stroke-width="10" stroke-dasharray="216.8 72.3" transform="rotate(135 60 60)" stroke-linecap="round"/>
-          <circle id="knobArc" cx="60" cy="60" r="46" fill="none" stroke="var(--accent)" stroke-width="10" stroke-dasharray="0 289" transform="rotate(135 60 60)" stroke-linecap="round"/>
-          <line id="knobNeedle" x1="60" y1="60" x2="60" y2="24" stroke="var(--ink)" stroke-width="4" stroke-linecap="round" transform="rotate(-135 60 60)"/>
-          <circle cx="60" cy="60" r="7" fill="var(--ink)"/>
+          <circle cx="60" cy="60" r="46" fill="none" stroke="var(--fill)" stroke-width="8" stroke-dasharray="216.8 72.3" transform="rotate(135 60 60)" stroke-linecap="round"/>
+          <circle id="knobArc" cx="60" cy="60" r="46" fill="none" stroke="var(--fg)" stroke-width="8" stroke-dasharray="0 289" transform="rotate(135 60 60)" stroke-linecap="round"/>
+          <line id="knobNeedle" x1="60" y1="60" x2="60" y2="28" stroke="var(--fg)" stroke-width="3" stroke-linecap="round" transform="rotate(-135 60 60)"/>
+          <circle cx="60" cy="60" r="5" fill="var(--fg)"/>
         </svg>
-        <div><div class="val" id="knobVal">–/10</div><div class="raw" id="knobRaw">센서 값 – / 1023</div><div class="meter" id="knobMeter"></div><div class="note" id="knobWhen">아두이노를 연결하고 손잡이를 돌려 보세요.</div></div>
+        <div><div class="note" style="margin-bottom:4px">회전 센서 · 소리 크기</div><div class="val" id="knobVal">–/10</div><div class="raw" id="knobRaw">센서 값 – / 1023</div><div class="meter" id="knobMeter"></div><div class="note" id="knobWhen" style="margin-top:8px">연결하고 손잡이를 돌려 보세요.</div></div>
       </div>
       <pre class="log" id="log" aria-label="아두이노가 보낸 글"></pre>
     </div>
   </div>
 </section>
-
-<!-- ===================== 표 ===================== -->
-<section class="card" id="table">
-  <h2>모스부호 표</h2>
-  <div class="mtab" id="mtab"></div>
-</section>
 </main>
-<footer class="wrap">하프 소리: Freesound 커뮤니티 녹음 (harp D4). 피아노·오르골·화음은 브라우저에서 직접 만든 소리예요. · <a href="guide/">모스부호기 만들기 가이드</a></footer>
-
+<footer class="wrap">하프 소리: Freesound 커뮤니티 녹음 (harp D4) · 피아노·오르골·화음은 브라우저에서 만든 소리 · <a href="guide/">만들기 가이드</a></footer>
 <script>
 'use strict';
 const MORSE={A:".-",B:"-...",C:"-.-.",D:"-..",E:".",F:"..-.",G:"--.",H:"....",I:"..",J:".---",K:"-.-",L:".-..",M:"--",N:"-.",O:"---",P:".--.",Q:"--.-",R:".-.",S:"...",T:"-",U:"..-",V:"...-",W:".--",X:"-..-",Y:"-.--",Z:"--..",
@@ -334,8 +307,9 @@ const DASH_TIME=250, WORD_GAP=2000, NEW_GAP=5000;
 const S={symbols:'',message:'',avgGap:180,lastRelease:0,wordDone:true,ext:false,down:null,downAt:0,dashCounted:false};
 const letterGap=()=>Math.min(800,Math.max(350,S.avgGap*3));
 function render(){
-  $('msg').innerHTML=S.message.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\?/g,'<span class="q">?</span>')+'<span style="opacity:.45">▏</span>';
+  $('msg').innerHTML=S.message.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\?/g,'<span class="q">?</span>')+'<span class="cursor">▏</span>';
   $('code').textContent=S.symbols;
+  if(typeof hintTable==='function') hintTable();
 }
 function addSymbol(sym){
   S.symbols+=sym; S.wordDone=false; $('hint').textContent=''; render();
@@ -620,7 +594,15 @@ $('connBtn').onclick=async()=>{
 if(!('serial' in navigator)) $('serialNote').textContent='지금 브라우저는 아두이노 연결을 지원하지 않아요 (Chrome·Edge에서 돼요). 치기·보내기·STILL HERE는 어디서나 돼요.';
 
 /* ======================= 표 ======================= */
-$('mtab').innerHTML=Object.entries(MORSE).map(([k,v])=>`<div><b>${k}</b><span>${v.replace(/\./g,'·').replace(/-/g,'—')}</span></div>`).join('');
+const glyph=c=>[...c].map(x=>x==='.'?'<i class="dt"></i>':'<i class="ds"></i>').join('');
+const card=([k,v])=>`<button class="mc" data-k="${k}" data-c="${v}" aria-label="${k} ${v}"><b>${k}</b><span class="g">${glyph(v)}</span><small>${v.replace(/\./g,'·').replace(/-/g,'−')}</small></button>`;
+const ents=Object.entries(MORSE);
+$('mtab').innerHTML='<p class="tlabel">알파벳</p><div class="tgrid">'+ents.filter(([k])=>/[A-Z]/.test(k)).map(card).join('')+'</div><p class="tlabel">숫자</p><div class="tgrid">'+ents.filter(([k])=>/[0-9]/.test(k)).map(card).join('')+'</div>';
+document.querySelectorAll('.mc').forEach(b=>b.onclick=async()=>{await audio();const U=140,[fd,fD]=pitchSet();
+  for(const x of b.dataset.c){const d=x==='-';b.classList.add('play');led(d?'ledR':'ledY',true);play(d?fD:fd,0,(d?U*3:U)/1000);await sleep(d?U*3:U);led(d?'ledR':'ledY',false);await sleep(U);}
+  b.classList.remove('play');});
+function hintTable(){const sy=S.symbols;document.querySelectorAll('.mc').forEach(b=>{const c=b.dataset.c;
+  b.classList.toggle('exact',!!sy&&c===sy);b.classList.toggle('cand',!!sy&&c!==sy&&c.startsWith(sy));b.classList.toggle('dim',!!sy&&!c.startsWith(sy));});}
 </script>
 </body>
 </html>
