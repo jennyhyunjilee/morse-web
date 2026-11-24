@@ -135,6 +135,7 @@ section[id^="step-"] ol.todo li::before{counter-increment:t;content:counter(t);f
 #harp .why{margin:0 0 10px}#harp .check{margin:8px 0}#harp pre.out{white-space:pre-wrap;word-break:break-all}
 .fm-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;align-items:start}@media (max-width:760px){.fm-grid{grid-template-columns:1fr}}
 .fm-box{background:var(--surface2)}
+.breath-box{border-left:4px solid #4FA3D9}.breath-svg{width:100%;max-width:560px;display:block;margin:4px 0 8px}
 .use-grid.one{grid-template-columns:minmax(0,640px)}
 #sos-sound .why{margin:0 0 8px}.tb-wrap{max-width:520px}
 .tb-ard{fill:var(--surface2);stroke:var(--line)}.tb-board{fill:var(--board,#F4F2EC);stroke:var(--line)}
@@ -270,6 +271,7 @@ code.hole{background:var(--surface2);font-weight:500}
   #mic-rgb ol.todo li{padding:4px 10px;font-size:12px}
   #mic-rgb .check>div{padding:5px 10px;font-size:11.5px}
   #mic-rgb .side .photo img{max-height:120px;object-fit:contain}
+  .breath-box{font-size:11.5px}
   #two-btn .check>div{padding:5px 10px;font-size:11.5px}
   #two-btn .step-head{margin-bottom:8px}
   #two-btn .side .photo img{max-height:120px;object-fit:cover}
@@ -818,7 +820,7 @@ C  C  G  G  A  A  G-  │ F  F  E  E  D  D  C-
 </section>
 
 <section id="mic-rgb">
-  <div class="step-head"><span class="step-no">13</span><div class="t"><h2>소리 센서 + RGB 라이트</h2><p class="lede">소리를 <b>빛</b>으로 바꾸고, 글자·음마다 <b>새 색</b>이 켜지게 해요. 소리 센서로 <b>소리를 내서 모스부호</b>를 칠 수도 있어요.</p></div></div>
+  <div class="step-head"><span class="step-no">13</span><div class="t"><h2>소리 센서 + RGB 라이트</h2><p class="lede">소리를 <b>빛</b>으로 바꾸고, 글자·음마다 <b>새 색</b>이 켜지게 해요. 마이크에 <b>숨(후~)</b>을 불면 SOS가 쳐지고, <b>소리를 내서 모스부호</b>를 칠 수도 있어요.</p></div></div>
   <div class="step-grid">
     <div class="side">
       <figure class="photo"><img src="img/mic.jpg" alt="빨간 소리 센서 모듈, 핀 AO G + DO"><figcaption>소리 센서: 핀 <b>AO · G · + · DO</b>. 은색 통이 마이크, 파란 나사가 감도</figcaption></figure>
@@ -867,6 +869,21 @@ C  C  G  G  A  A  G-  │ F  F  E  E  D  D  C-
 </svg></div></div>
     </div>
   </div>
+  <div class="why breath-box">
+    <h3 class="use-h" style="margin-top:0">🌬 숨(후~)을 불면 신호가 돼요</h3>
+    <svg class="breath-svg" viewBox="0 0 560 120" role="img" aria-label="숨 길이에 따라 SOS 또는 HERE">
+      <text x="0" y="22" class="gl-t">박수 · 말소리 (0.4초 미만)</text><rect x="190" y="10" width="40" height="16" rx="4" fill="var(--line)"/><text x="245" y="22" class="gl-s">→ 그냥 넘어가요</text>
+      <text x="0" y="62" class="gl-t">후~ 짧게 (0.4 ~ 1.5초)</text><rect x="190" y="50" width="120" height="16" rx="4" fill="#4FA3D9" opacity=".8"/><text x="325" y="62" class="gl-t" fill="#C0392B">→ SOS  ···  − − −  ···  (빨강)</text>
+      <text x="0" y="102" class="gl-t">후~~~ 길게 (1.5초 넘게)</text><rect x="190" y="90" width="230" height="16" rx="4" fill="#4FA3D9" opacity=".8"/><text x="435" y="102" class="gl-t" fill="#1D8C8C">→ HERE (청록)</text>
+    </svg>
+    <ol class="steps-list">
+      <li>소리 센서의 은색 마이크에 입을 가까이 대고 <b>"후~"</b> 하고 바람을 불어요.</li>
+      <li>부는 동안 RGB 라이트가 <b>숨의 세기만큼 푸르게</b> 밝아져요 (숨 = 빛).</li>
+      <li>멈추면: <b>짧게</b> 불었으면 부저가 <b>SOS</b>를 쳐요(빨강 빛). <b>길게</b> 불었으면 <b>HERE</b>("여기 있어요")를 쳐요(청록 빛).</li>
+      <li>Serial Monitor에 <code class="hole">[숨] 후~ 820ms → SOS</code>처럼 얼마나 불었는지 떠요. 끄고 켜기: <code class="hole">breath</code></li>
+    </ol>
+    <p class="note" style="margin:6px 0 0">반응이 없으면 <code class="hole">miclevel</code>로 불 때 숫자가 40보다 커지는지 보고, 작으면 마이크에 더 가까이 불거나 파란 나사로 감도를 올려요. 박수처럼 짧은 소리나 부저 소리에는 반응하지 않아요. 작품으로는 <b>숨 = 구조 신호(SOS), 긴 숨 = "여기 있어요"</b>, 숨이 곧 빛과 소리가 되는 장치로 쓸 수 있어요.</p>
+  </div>
   <div class="use-grid">
     <div>
       <h3 class="use-h">RGB 라이트가 하는 일</h3>
@@ -877,6 +894,10 @@ C  C  G  G  A  A  G-  │ F  F  E  E  D  D  C-
         <div>멜로디 연주</div><div><b>음마다 색</b>: 도 빨강 → 레 주황 → 미 노랑 → 파 초록 → 솔 하늘 → 라 파랑 → 시 보라</div>
         <div>STILL HERE</div><div>임계점에 <b>하얗게 차오르다</b> 끊김 → 정적에 <b>푸른 잔상</b> → 숨에서 음 색으로 스며듦</div>
         <div>아무것도 안 할 때</div><div><b>방 소리 크기를 빛으로</b>: 조용하면 꺼짐, 클수록 초록 → 노랑 → 빨강</div>
+        <div>회전 센서 돌릴 때</div><div>소리 크기 = 색: 작으면 <b>파랑</b> → 크면 <b>빨강</b></div>
+        <div>음 바꾸기 (두 버튼)</div><div>새 음 세트의 색이 잠깐 켜져요</div>
+        <div>Serial로 글자 보내기</div><div>점 노랑 · 대시 자홍, 글자가 끝나면 <b>그 글자 색</b></div>
+        <div>숨(후~)을 불 때</div><div><b>숨의 세기만큼 푸르게</b> 밝아져요</div>
       </div>
     </div>
     <div>

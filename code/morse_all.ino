@@ -33,6 +33,7 @@ const int MIC_PIN = A1;                          // 소리 센서 AO
 const bool USE_KNOB      = true;  // 회전 센서(A0)로 소리 크기 조절. 센서가 없으면 false
 const bool USE_RGB       = true;  // RGB 라이트: 글자마다 새 색, 음마다 무지개색, 소리 크기를 빛으로
 const bool USE_MIC       = true;  // 소리 센서: 소리를 빛으로 보여주고, mic 입력하면 소리로 모스부호 치기
+const bool BREATH_SOS    = true;  // 마이크에 '후~' 숨을 불면: 짧게(0.4~1.5초) = SOS, 길게(1.5초 넘게) = HERE 자동 송신
 const int  MIC_THRESHOLD = 40;    // 소리로 칠 때 이보다 크면 '누름' (miclevel 로 내 방 소리 크기를 먼저 보세요)
 const bool LOUD_MODE     = true;  // 9번 핀도 같이 써서 최대 소리 (부저 − 다리가 9번에 있을 때). GND에 있으면 상관없어요
 const bool BUZZER_ON     = true;  // false면 부저는 조용 (소리는 웹사이트에서만)
@@ -244,6 +245,8 @@ void readKnob() {
   if (noteActive) buzzerHW(noteBase);               // 울리는 중이면 바로 반영
   if (knobFeedback && !pressedAny()) {               // 보이게·들리게: 노란 LED 밝기 = 크기, 그 크기로 짧게 삑
     analogWrite(DOT_LED, knobVolume * 25);
+    setHue(map(knobVolume, 0, 10, 240, 0), knobVolume ? 60 + knobVolume * 19 : 0);   // RGB: 작으면 파랑, 크면 빨강
+    rgbHoldUntil = millis() + 700;
     knobShowUntil = millis() + 700;
     buzzerOn(BASE_FREQ);
     knobBeepUntil = millis() + 90;
@@ -439,6 +442,7 @@ int currentFreq() { return dotFreq(); }
 void soundOn(int f) { buzzerOn(f); lastFreq = f; }
 void soundOff()     { noteRelease(); }
 
+int sendHue = -1;   // 0 이상이면 송신하는 동안 RGB를 그 색 하나로 (SOS = 빨강)
 void sendText(String text) {
   text.toUpperCase();
   Serial.print(F(">> 송신: ")); Serial.println(text);
@@ -452,11 +456,13 @@ void sendText(String text) {
       bool isDash = (code[j] == '-');
       int led = isDash ? DASH_LED : DOT_LED;
       digitalWrite(led, HIGH); soundOn(isDash ? dashFreq() : dotFreq());
+      if (sendHue >= 0) setHue(sendHue, 255); else setHue(isDash ? 320 : 50, 220);   // 점 노랑 · 대시 자홍
       soundDelay(isDash ? UNIT * 3 : UNIT);
-      digitalWrite(led, LOW); soundOff();
+      digitalWrite(led, LOW); soundOff(); setRGB(0, 0, 0);
       soundDelay(UNIT);
     }
-    soundDelay(UNIT * 2);
+    if (sendHue < 0) { setHue(letterHue(c), 160); soundDelay(UNIT); setRGB(0, 0, 0); soundDelay(UNIT); }   // 글자 끝 = 그 글자 색
+    else soundDelay(UNIT * 2);
   }
   Serial.println(F(">> 송신 끝"));
 }
@@ -659,6 +665,45 @@ void micLevelPrint() {                          // miclevel: 4초 동안 소리 
   Serial.print(F("지금 기준(MIC_THRESHOLD) = ")); Serial.println(MIC_THRESHOLD);
 }
 
+// ---------- 숨(후~) 감지 → 자동 송신 ----------
+//  마이크에 바람을 불면 소리 센서 값이 '길게' 커져요. 박수처럼 짧은 소리(0.4초 미만)는 무시해요.
+//  부는 동안: RGB가 숨의 세기만큼 푸르게 밝아져요 (숨 = 빛)
+//  다 불고 나면: 0.4~1.5초 = SOS (빨강) · 1.5초 넘게 = HERE "여기 있어요" (청록)
+const unsigned long BREATH_MIN = 400, BREATH_LONG = 1500;
+bool breathOn = false;
+unsigned long breathStart = 0, breathQuiet = 0;
+bool breathEnabled = BREATH_SOS;
+void breathSend(const char* text, int hue) {
+  sendHue = hue; sendText(text); sendHue = -1;
+  setRGB(0, 0, 0);
+  quietSince = millis();                                         // 제 소리 뒤에 바로 다시 듣지 않게
+}
+bool handleBreath(unsigned long now) {
+  if (!USE_MIC || !breathEnabled || micKey) return false;
+  if (noteActive) { quietSince = now; breathOn = false; return false; }
+  if (now - quietSince < 300) return false;
+  bool loud = micLevel > MIC_THRESHOLD;
+  if (!breathOn) {
+    if (loud && !pressedAny()) { breathOn = true; breathStart = now; breathQuiet = 0; }
+    return false;
+  }
+  if (loud) breathQuiet = 0; else if (!breathQuiet) breathQuiet = now;
+  unsigned long dur = now - breathStart;
+  if (dur >= BREATH_MIN && loud) {                               // 숨이 빛이 돼요
+    int v = constrain(map(micLevel, MIC_THRESHOLD, 300, 50, 255), 50, 255);
+    setRGB(v / 4, v * 3 / 5, v); rgbHoldUntil = now + 150;
+  }
+  if (breathQuiet && now - breathQuiet > 150) {                  // 숨이 끝났어요
+    breathOn = false;
+    unsigned long len = breathQuiet - breathStart;
+    if (len < BREATH_MIN) return false;                          // 짧은 소리(박수 등)는 그냥 넘어가요
+    if (len >= BREATH_LONG) { Serial.print(F("\n[숨] 길게 ")); Serial.print(len); Serial.println(F("ms → HERE (여기 있어요)")); breathSend("HERE", 190); }
+    else                    { Serial.print(F("\n[숨] 후~ "));  Serial.print(len); Serial.println(F("ms → SOS")); breathSend("SOS", 0); }
+    return true;
+  }
+  return dur >= BREATH_MIN;
+}
+
 // (B) 점 버튼과 대시 버튼을 동시에 누르면 음 세트가 바뀌어요
 bool checkPitchChange(unsigned long now) {
   if (!TWO_BUTTONS) return false;
@@ -674,6 +719,7 @@ bool checkPitchChange(unsigned long now) {
   Serial.print(F("  (점 "));  Serial.print(dotFreq());
   Serial.print(F("Hz · 대시 ")); Serial.print(dashFreq());
   Serial.println(F("Hz)"));
+  setHue(freqHue(dotFreq()), 255); rgbHoldUntil = millis() + 900;   // RGB = 새 음의 색
   for (int i = 0; i <= pitchSet; i++) { digitalWrite(LETTER_LED, HIGH); delay(90); digitalWrite(LETTER_LED, LOW); delay(90); }   // 초록 = 몇 번째 세트
   buzzerOn(dotFreq());  delay(160); buzzerOff(); delay(40);       // 미리 듣기: 점 음 → 대시 음
   buzzerOn(dashFreq()); delay(260); buzzerOff();
@@ -694,6 +740,7 @@ void morseLoop() {
   if (checkPitchChange(now)) return;            // (B) 두 버튼 동시 = 음 바꾸기
   if (handleDashButton(now)) return;
   if (handleMicKey(now)) return;                // 소리로 치기 (mic)
+  if (handleBreath(now)) return;                // 숨(후~) → SOS · HERE
 
   if (down && !pressed) {
     if (symbols.length() > 0) avgGap = (avgGap * 3 + (now - releaseTime)) / 4;   // 글자 안에서 쉰 시간 기억
@@ -774,6 +821,7 @@ void morseLoop() {
     else if (low == "plane") playMelody(SONG_PLANE, 300);          // 떴다 떴다 비행기
     else if (low == "mic") { micKey = !micKey; Serial.println(micKey ? F("[소리 센서] 소리로 치기 켜짐: 짧은 소리 = 점, 0.25초 넘게 계속 = 대시. 다시 mic = 끄기") : F("[소리 센서] 소리로 치기 꺼짐")); }
     else if (low == "miclevel") micLevelPrint();
+    else if (low == "breath") { breathEnabled = !breathEnabled; Serial.println(breathEnabled ? F("[숨] 후~ 감지 켜짐: 짧게 = SOS, 길게 = HERE") : F("[숨] 후~ 감지 꺼짐")); }
     else if (low == "rgb") { for (int h = 0; h < 360; h += 6) { setHue(h, 255); delay(25); } setRGB(0, 0, 0); }   // RGB 점검: 무지개
     else if (low.startsWith("play ")) playMelody(line.c_str() + 5, 320);   // 내가 쓴 악보: play CCGGAAG-
     else if (low != "stop") sendText(line);
@@ -807,6 +855,7 @@ void setup() {
   if (TWO_BUTTONS) Serial.println(F("음 바꾸기: 점 버튼 + 대시 버튼 동시에 (원래 → 도 → 미 → 솔 → 높은 도)"));
   Serial.println(F("멜로디: star · bell · plane · scale 입력 (stop 또는 버튼 = 멈춤), 또는 play CCGGAAG- (C=도 D=레 E=미 F=파 G=솔 A=라 B=시)"));
   if (USE_MIC) Serial.println(F("소리 센서: mic = 소리로 치기 켜기/끄기 · miclevel = 소리 크기 보기"));
+  if (USE_MIC && BREATH_SOS) Serial.println(F("숨: 마이크에 후~ 짧게 = SOS · 길게 = HERE (breath = 켜기/끄기)"));
   if (USE_RGB) Serial.println(F("RGB 라이트: 글자마다 새 색 · 음마다 무지개색 · rgb = 무지개 점검"));
 }
 
