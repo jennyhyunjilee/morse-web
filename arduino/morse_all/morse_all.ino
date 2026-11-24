@@ -394,6 +394,7 @@ void sendText(String text) {
 }
 
 // 지금 문장을 마무리하고 새로 시작 (초록 2번 깜빡)
+bool sentenceMusic(String m);   // 아래에 있어요
 void newSentence() {
   message.trim();
   if (message.length() > 0) {
@@ -401,10 +402,12 @@ void newSentence() {
     Serial.print(message);
     Serial.println(F("  → 새로 치세요 ==="));
   }
+  String played = message;
   message = "";
   symbols = "";
   wordSpaceDone = true;
   for (int i = 0; i < 2; i++) { digitalWrite(LETTER_LED, HIGH); delay(100); digitalWrite(LETTER_LED, LOW); delay(100); }
+  sentenceMusic(played);   // 친 문장이 악보면 연주
 }
 
 // ---------- 대시 버튼 (3번, 두 번째 버튼) ----------
@@ -478,8 +481,11 @@ int letterNote(char c) {
 bool anyButtonDown();
 void playMelody(const char* m, unsigned int beat) {
   Serial.print(F(">> 연주: ")); Serial.println(m);
+  bool byButton = false;
   for (int i = 0; m[i]; i++) {
-    if (anyButtonDown()) break;                                 // 버튼 누르면 멈춤
+    if (anyButtonDown()) { byButton = true; Serial.println(F(">> 멈춤 (버튼)")); break; }   // 버튼 누르면 멈춤
+    String l;
+    if (readLine(l)) { l.toLowerCase(); if (l == "stop") { Serial.println(F(">> 멈춤 (stop)")); break; } }   // stop 입력해도 멈춤
     char c = m[i];
     if (c == '_') { delay(beat); continue; }
     int k = noteIndex(c);
@@ -495,6 +501,8 @@ void playMelody(const char* m, unsigned int beat) {
     digitalWrite(DOT_LED, LOW);
     delay(d * 15 / 100);
   }
+  buzzerOff(); digitalWrite(DOT_LED, LOW);
+  if (byButton) { while (anyButtonDown()) { } delay(40); }        // 멈춘 버튼은 점·대시로 치지 않아요
   digitalWrite(LETTER_LED, HIGH); delay(120); digitalWrite(LETTER_LED, LOW);
   Serial.println(F(">> 연주 끝"));
 }
@@ -504,6 +512,32 @@ bool anyButtonDown() { return digitalRead(BUTTON_PIN) == LOW || (TWO_BUTTONS && 
 const char SONG_STAR[]  = "CCGGAAG- FFEEDDC- GGFFEED- GGFFEED- CCGGAAG- FFEEDDC-";        // 반짝반짝 작은 별
 const char SONG_BELL[]  = "GGAAGGE- GGEED--_ GGAAGGE- GEDEC--";                         // 학교종이 땡땡땡
 const char SONG_SCALE[] = "CDEFGABc- cBAGFEDC-";                                           // 도레미파솔라시도
+const char SONG_PLANE[] = "EDCDEEE- DDD- EGG- EDCDEEE- DDEDC--";                            // 떴다 떴다 비행기
+
+// 모스부호로 친 문장을 노래로 (문장 끝 = 5초 쉬었을 때)
+//  · STAR / BELL / PLANE / SCALE 을 치면 그 곡
+//  · 그 밖에는 A~G(도레미…)와 숫자 1~8을 이어서 연주. T(—) = 앞 음 길게, 띄어쓰기 = 쉼
+bool sentenceMusic(String m) {
+  m.trim();
+  String name = m; name.replace(" ", "");
+  if (name == "STAR")  { playMelody(SONG_STAR, 330);  return true; }
+  if (name == "BELL")  { playMelody(SONG_BELL, 300);  return true; }
+  if (name == "PLANE") { playMelody(SONG_PLANE, 300); return true; }
+  if (name == "SCALE") { playMelody(SONG_SCALE, 260); return true; }
+  char buf[70]; int n = 0, notes = 0;
+  for (unsigned int i = 0; i < m.length() && n < 68; i++) {
+    char c = m[i];
+    if (c >= 'A' && c <= 'G')      { buf[n++] = c; notes++; }
+    else if (c >= '1' && c <= '8') { buf[n++] = "CDEFGABc"[c - '1']; notes++; }
+    else if (c == 'T' && n > 0)    { buf[n++] = '-'; }
+    else if (c == ' ' && n > 0)    { buf[n++] = '_'; }
+  }
+  buf[n] = 0;
+  if (notes < 2) return false;                                 // 음이 2개 안 되면 연주 안 해요 (예: SOS)
+  Serial.println(F(">> 친 문장을 악보로 연주해요"));
+  playMelody(buf, 330);
+  return true;
+}
 
 // (B) 점 버튼과 대시 버튼을 동시에 누르면 음 세트가 바뀌어요
 bool checkPitchChange(unsigned long now) {
@@ -612,6 +646,7 @@ void morseLoop() {
     else if (low == "star")  playMelody(SONG_STAR, 330);           // 반짝반짝 작은 별
     else if (low == "bell")  playMelody(SONG_BELL, 300);           // 학교종이 땡땡땡
     else if (low == "scale") playMelody(SONG_SCALE, 260);          // 도레미파솔라시도
+    else if (low == "plane") playMelody(SONG_PLANE, 300);          // 떴다 떴다 비행기
     else if (low.startsWith("play ")) playMelody(line.c_str() + 5, 320);   // 내가 쓴 악보: play CCGGAAG-
     else if (low != "stop") sendText(line);
   }
@@ -640,7 +675,7 @@ void setup() {
   if (USE_KNOB) { lastKnobRaw = analogRead(KNOB_PIN); knobVolume = min(10, (lastKnobRaw + 51) / 102); printKnob(lastKnobRaw); }
   Serial.println(F("새 문장: 5초 쉬기 (또는 new 입력)"));
   if (TWO_BUTTONS) Serial.println(F("음 바꾸기: 점 버튼 + 대시 버튼 동시에 (원래 → 도 → 미 → 솔 → 높은 도)"));
-  Serial.println(F("멜로디: star · bell · scale 입력, 또는 play CCGGAAG- (C=도 D=레 E=미 F=파 G=솔 A=라 B=시)"));
+  Serial.println(F("멜로디: star · bell · plane · scale 입력 (stop 또는 버튼 = 멈춤), 또는 play CCGGAAG- (C=도 D=레 E=미 F=파 G=솔 A=라 B=시)"));
 }
 
 void loop() {

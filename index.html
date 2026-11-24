@@ -220,6 +220,20 @@ code.hole{background:var(--surface2);font-weight:500}
 .glinks a{padding:6px 10px;border-radius:8px;color:var(--muted);text-decoration:none;font-size:14px;white-space:nowrap}
 .glinks a:hover{background:var(--surface2);color:var(--ink)}
 .glinks a.go{background:var(--ink);color:var(--bg)}
+
+.sc-keys{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.sc-k{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;gap:4px}
+.sc-k .sc-big{font-size:17px}.sc-k .sc-l{font-family:var(--mono);font-size:20px;font-weight:600}
+.sc-k small{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.sc-g{display:flex;gap:4px;align-items:center;height:10px}.sc-g .dt{width:8px;height:8px;border-radius:50%;background:var(--ink)}.sc-g .ds{width:20px;height:8px;border-radius:5px;background:var(--ink)}
+.sc-songs{display:grid;gap:14px}
+.sc-song{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:grid;gap:10px}
+.sc-head{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline}.sc-head .use-h{margin:0}
+.sc-line{display:grid;gap:6px}.sc-kor{font-size:13.5px;color:var(--muted)}
+.sc-cells{display:flex;flex-wrap:wrap;gap:6px}
+.sc-n{display:grid;gap:3px;justify-items:center;background:var(--surface2);border-radius:10px;padding:6px 8px;min-width:46px}
+.sc-n b{font-family:var(--mono);font-size:16px}.sc-n small{font-size:10.5px;color:var(--muted)}
+.sc-sp{align-self:center;font-size:11px;color:var(--muted);padding:0 4px}
 @media print{.gnav{display:none}}
 @media print{
   .pdf-link{display:none}
@@ -233,7 +247,7 @@ code.hole{background:var(--surface2);font-weight:500}
   #board{border-top:1px solid var(--line);padding-top:14px}
   .labeled img{max-height:330px;width:auto;max-width:100%;margin-inline:auto}
   .detail svg{max-height:140px}
-  #pins,#step-1,#step-2,#step-3,#step-4,#step-5,#step-6,#step-7,#use,#two-btn,#sos-sound,#harp,#flow,#fix,#code{break-before:page;border-top:0}
+  #pins,#step-1,#step-2,#step-3,#step-4,#step-5,#step-6,#step-7,#use,#two-btn,#sos-sound,#harp,#score,#flow,#fix,#code{break-before:page;border-top:0}
   .step-grid{grid-template-columns:1fr;gap:12px}
   .side{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
   .board-wrap{max-width:500px;width:100%;margin-inline:auto;break-inside:avoid}
@@ -279,7 +293,7 @@ code.hole{background:var(--surface2);font-weight:500}
 
 </head>
 <body>
-<nav class="gnav" aria-label="사이트 메뉴"><div class="in"><a class="glogo" href="#"><span style="display:flex;gap:4px;align-items:center"><i style="width:6px"></i><i style="width:18px"></i><i style="width:6px"></i></span>Morse</a><div class="glinks"><a href="#parts">준비물</a><a href="#step-1">만들기</a><a href="#use">치는 법</a><a href="#fix">안 될 때</a><a href="guide.pdf" target="_blank" rel="noopener">PDF</a><a class="go" href="play/">치기 →</a></div></div></nav>
+<nav class="gnav" aria-label="사이트 메뉴"><div class="in"><a class="glogo" href="#"><span style="display:flex;gap:4px;align-items:center"><i style="width:6px"></i><i style="width:18px"></i><i style="width:6px"></i></span>Morse</a><div class="glinks"><a href="#parts">준비물</a><a href="#step-1">만들기</a><a href="#use">치는 법</a><a href="#score">모스 악보</a><a href="#fix">안 될 때</a><a href="guide.pdf" target="_blank" rel="noopener">PDF</a><a class="go" href="play/">치기 →</a></div></div></nav>
 <header class="top wrap">
   <p class="kicker">영상프로그래밍방법론 · 11주차 · ARDUINO UNO</p>
   <h1>모스부호기 만들기</h1>
@@ -295,7 +309,7 @@ code.hole{background:var(--surface2);font-weight:500}
     <a href="#parts">준비물</a><a href="#board">브레드보드</a><a href="#pins">핀 찾기</a>
     <a href="#step-1" data-s="1">1 GND</a><a href="#step-2" data-s="2">2 버튼</a><a href="#step-3" data-s="3">3 노랑 LED</a>
     <a href="#step-4" data-s="4">4 빨강·초록</a><a href="#step-5" data-s="5">5 부저</a><a href="#step-6" data-s="6">6 회전 센서</a>
-    <a href="#step-7" data-s="7">7 업로드</a><a href="#use">8 치는 법</a><a href="#two-btn">9 버튼 2개</a><a href="#sos-sound">10 SOS · 멜로디</a><a href="#harp">11 회전 센서</a><a href="#flow">전기 흐름</a><a href="#fix">안 될 때</a><a href="#morse">모스부호 표</a><a href="#code">코드</a>
+    <a href="#step-7" data-s="7">7 업로드</a><a href="#use">8 치는 법</a><a href="#two-btn">9 버튼 2개</a><a href="#sos-sound">10 SOS · 멜로디</a><a href="#harp">11 회전 센서</a><a href="#score">12 모스 악보</a><a href="#flow">전기 흐름</a><a href="#fix">안 될 때</a><a href="#morse">모스부호 표</a><a href="#code">코드</a>
   </nav>
 </header>
 
@@ -584,12 +598,10 @@ code.hole{background:var(--surface2);font-weight:500}
         <li><span class="sw" style="--w:#8B5A3C"></span><span>갈색 선: <code class="hole">a45</code> (OUT 줄) → 아두이노 <b>A0</b></span></li>
         <li><span class="sw" style="--w:#D64541"></span><span>빨강 선: <code class="hole">a46</code> (VCC 줄) → 아두이노 <b>5V</b></span></li>
         <li><span class="sw" style="--w:#2B2B2B"></span><span>검정 선: <code class="hole">a47</code> (GND 줄) → 아두이노 <b>GND</b> (아직 안 쓴 GND 핀)</span></li>
-        <li><span class="sw part" style="--w:var(--accent)"></span><span>Arduino IDE에서 코드 <b>27번째 줄</b>(“설정 (여기만 바꾸면 됨)” 바로 아래)의 <code class="hole">false</code>를 지우고 <code class="hole">true</code>로 써요. 그다음 왼쪽 위 <kbd>→</kbd> 업로드 버튼</span></li>
+        <li><span class="sw part" style="--w:var(--accent)"></span><span><code class="hole">morse_all.ino</code>는 코드 위쪽 <code class="hole">USE_KNOB</code>가 이미 <code class="hole">true</code>예요. 그대로 <kbd>→</kbd> 업로드하면 회전 센서가 <b>소리 크기</b>를 조절해요 (11단계)</span></li>
       </ol>
-      <pre class="out">26  // ---------- 설정 (여기만 바꾸면 됨) ----------
-27  const bool USE_KNOB      = <b>true</b>;   ← false를 true로
-28  const bool BUZZER_ACTIVE = false;
-29  const int  BASE_FREQ     = 800;</pre>
+      <pre class="out">// ---------- 설정 (여기만 바꾸면 됨) ----------
+const bool USE_KNOB      = <b>true</b>;  // 회전 센서(A0)로 소리 크기 조절</pre>
       <p class="why"><b>왜 판에 꽂아요?</b> 센서 핀도 수(핀)라서 수-수 선을 바로 꽂을 수 없어요. 센서를 판 구멍에 꽂으면, 같은 줄 a칸에 수-수 선을 꽂아 이어 쓸 수 있어요. 판이 소켓 역할을 하는 거예요.</p>
       <p class="note">순서가 GND · VCC · OUT으로 꽂히면 선도 그 줄에 맞춰 바꿔요. 6단계는 건너뛰어도 돼요.</p>
     </div>
@@ -605,7 +617,7 @@ code.hole{background:var(--surface2);font-weight:500}
     <div class="main">
       <ol class="steps-list">
         <li><a href="https://www.arduino.cc/en/software" target="_blank" rel="noopener">Arduino IDE 2</a>를 설치해요.</li>
-        <li><b>File(파일) → Open…(열기)</b> → <code class="hole">morse_machine</code> 폴더 안의 <code class="hole">morse_machine.ino</code>를 열어요. 코드 칸에 “put your setup code here”만 보이면 아직 안 연 거예요. 다른 컴퓨터라면 아래 <a href="#code">코드 전체</a>를 복사해 붙여넣어요.</li>
+        <li><b>File(파일) → Open…(열기)</b> → <code class="hole">morse_all</code> 폴더 안의 <code class="hole">morse_all.ino</code>를 열어요 (모스부호기 + 버튼 2개 + 회전 센서 + STILL HERE + 멜로디가 다 들어 있는 코드). 코드 칸에 “put your setup code here”만 보이면 아직 안 연 거예요. 다른 컴퓨터라면 아래 <a href="#code">코드 전체</a>를 복사해 붙여넣어요.</li>
         <li>USB를 꽂고 <b>Tools(도구) → Board(보드) → Arduino AVR Boards → Arduino UNO</b>. 이름 앞에 ✓가 있으면 이미 된 거예요.</li>
         <li><b>Tools(도구) → Port(포트) → /dev/cu.usbmodem…</b> (뒤에 Arduino Uno가 붙은 것). 안 보이면 USB를 뺐다 다시 꽂아요. 더 쉬운 방법: 업로드 버튼 오른쪽 <b>Select Board</b> 칸에서 Arduino Uno 고르기</li>
         <li>왼쪽 위 <kbd>→</kbd> <b>Upload</b>(업로드) 버튼. 아래에 “Done uploading.”(업로드 완료)이 뜨면 성공이에요.</li>
@@ -615,7 +627,7 @@ code.hole{background:var(--surface2);font-weight:500}
         <div role="columnheader">켜질 때 보이는 것</div><div role="columnheader">뜻</div>
         <div>LED가 노랑 → 빨강 → 초록 차례로 켜짐</div><div>LED 배선 OK. 안 켜지는 색은 그 LED와 저항을 확인</div>
         <div>낮은 음 → 중간 음 → 높은 음</div><div>수동 부저. 음 높이 바꾸기 가능</div>
-        <div>세 번 다 똑같은 “삐”</div><div>능동 부저. 코드 <b>28번째 줄</b> <code class="hole">BUZZER_ACTIVE</code>의 <code class="hole">false</code>를 <code class="hole">true</code>로 바꾸고 다시 업로드</div>
+        <div>세 번 다 똑같은 “삐”</div><div>능동 부저. 코드 위쪽 설정의 <code class="hole">BUZZER_ACTIVE</code>의 <code class="hole">false</code>를 <code class="hole">true</code>로 바꾸고 다시 업로드</div>
       </div>
       <p>시리얼 모니터에는 이렇게 떠요.</p>
       <pre class="out">=== 모스부호기 준비 완료 ===
@@ -766,6 +778,14 @@ code.hole{background:var(--surface2);font-weight:500}
   </div>
 </section>
 
+<section id="score">
+  <div class="step-head"><span class="step-no">12</span><div class="t"><h2>모스부호 악보표: 보드로 노래 치기</h2><p class="lede">음이름 글자(C=도 D=레 …)를 모스부호로 치고 <b>5초 쉬면</b>, 친 문장이 악보처럼 이어서 연주돼요.</p></div></div>
+  <div class="why"><b>치는 법</b> ① 글자 하나 치고 <b>초록 불</b> 기다리기 → 그 음이 울려요 ② <b>T</b>(대시 하나) = 앞 음을 길게 ③ 2초 쉬면 띄어쓰기 = 한 박 쉼 ④ 다 치고 <b>5초</b> 쉬면 문장 끝 → 처음부터 연주 ⑤ 멈추기: 아무 버튼 누르기 또는 Serial에 <code class="hole">stop</code></div>
+  <div><h3 class="use-h">음 ↔ 모스부호</h3><div class="sc-keys"><div class="sc-k"><b class="sc-big">도</b><span class="sc-l">C</span><span class="sc-g"><i class="ds"></i><i class="dt"></i><i class="ds"></i><i class="dt"></i></span><small>−·−·</small></div><div class="sc-k"><b class="sc-big">레</b><span class="sc-l">D</span><span class="sc-g"><i class="ds"></i><i class="dt"></i><i class="dt"></i></span><small>−··</small></div><div class="sc-k"><b class="sc-big">미</b><span class="sc-l">E</span><span class="sc-g"><i class="dt"></i></span><small>·</small></div><div class="sc-k"><b class="sc-big">파</b><span class="sc-l">F</span><span class="sc-g"><i class="dt"></i><i class="dt"></i><i class="ds"></i><i class="dt"></i></span><small>··−·</small></div><div class="sc-k"><b class="sc-big">솔</b><span class="sc-l">G</span><span class="sc-g"><i class="ds"></i><i class="ds"></i><i class="dt"></i></span><small>−−·</small></div><div class="sc-k"><b class="sc-big">라</b><span class="sc-l">A</span><span class="sc-g"><i class="dt"></i><i class="ds"></i></span><small>·−</small></div><div class="sc-k"><b class="sc-big">시</b><span class="sc-l">B</span><span class="sc-g"><i class="ds"></i><i class="dt"></i><i class="dt"></i><i class="dt"></i></span><small>−···</small></div><div class="sc-k"><b class="sc-big">높은 도</b><span class="sc-l">8</span><span class="sc-g"><i class="ds"></i><i class="ds"></i><i class="ds"></i><i class="dt"></i><i class="dt"></i></span><small>−−−··</small></div><div class="sc-k"><b class="sc-big">~ 길게</b><span class="sc-l">T</span><span class="sc-g"><i class="ds"></i></span><small>−</small></div></div></div>
+  <div class="sc-songs"><div class="sc-song"><div class="sc-head"><h3 class="use-h">반짝반짝 작은 별</h3><span class="note" style="border:0;padding:0">통째로: 모스로 <code class="hole">STAR</code> 치기 · Serial <code class="hole">star</code></span></div><div class="sc-line"><div class="sc-kor">도 도 솔 솔 라 라 솔~</div><div class="sc-cells"><span class="sc-n"><b>C</b><span class="sc-g"><i class="ds"></i><i class="dt"></i><i class="ds"></i><i class="dt"></i></span><small>도</small></span><span class="sc-n"><b>C</b><span class="sc-g"><i class="ds"></i><i class="dt"></i><i class="ds"></i><i class="dt"></i></span><small>도</small></span><span class="sc-n"><b>G</b><span class="sc-g"><i class="ds"></i><i class="ds"></i><i class="dt"></i></span><small>솔</small></span><span class="sc-n"><b>G</b><span class="sc-g"><i class="ds"></i><i class="ds"></i><i class="dt"></i></span><small>솔</small></span><span class="sc-n"><b>A</b><span class="sc-g"><i class="dt"></i><i class="ds"></i></span><small>라</small></span><span class="sc-n"><b>A</b><span class="sc-g"><i class="dt"></i><i class="ds"></i></span><small>라</small></span><span class="sc-n"><b>G</b><span class="sc-g"><i class="ds"></i><i class="ds"></i><i class="dt"></i></span><small>솔</small></span><span class="sc-n"><b>T</b><span class="sc-g"><i class="ds"></i></span><small>~ 길게</small></span></div></div><div class="sc-line"><div class="sc-kor">파 파 미 미 레 레 도~</div><div class="sc-cells"><span class="sc-n"><b>F</b><span class="sc-g"><i class="dt"></i><i class="dt"></i><i class="ds"></i><i class="dt"></i></span><small>파</small></span><span class="sc-n"><b>F</b><span class="sc-g"><i class="dt"></i><i class="dt"></i><i class="ds"></i><i class="dt"></i></span><small>파</small></span><span class="sc-n"><b>E</b><span class="sc-g"><i class="dt"></i></span><small>미</small></span><span class="sc-n"><b>E</b><span class="sc-g"><i class="dt"></i></span><small>미</small></span><span class="sc-n"><b>D</b><span class="sc-g"><i class="ds"></i><i class="dt"></i><i class="dt"></i></span><small>레</small></span><span class="sc-n"><b>D</b><span class="sc-g"><i class="ds"></i><i class="dt"></i><i class="dt"></i></span><small>레</small></span><span class="sc-n"><b>C</b><span class="sc-g"><i class="ds"></i><i class="dt"></i><i class="ds"></i><i class="dt"></i></span><small>도</small></span><span class="sc-n"><b>T</b><span class="sc-g"><i class="ds"></i></span><small>~ 길게</small></span></div></div></div><div class="sc-song"><div class="sc-head"><h3 class="use-h">학교종이 땡땡땡</h3><span class="note" style="border:0;padding:0">통째로: 모스로 <code class="hole">BELL</code> 치기 · Serial <code class="hole">bell</code></span></div><div class="sc-line"><div class="sc-kor">솔 솔 라 라 솔 솔 미~</div><div class="sc-cells"><span class="sc-n"><b>G</b><span class="sc-g"><i class="ds"></i><i class="ds"></i><i class="dt"></i></span><small>솔</small></span><span class="sc-n"><b>G</b><span class="sc-g"><i class="ds"></i><i class="ds"></i><i class="dt"></i></span><small>솔</small></span><span class="sc-n"><b>A</b><span class="sc-g"><i class="dt"></i><i class="ds"></i></span><small>라</small></span><span class="sc-n"><b>A</b><span class="sc-g"><i class="dt"></i><i class="ds"></i></span><small>라</small></span><span class="sc-n"><b>G</b><span class="sc-g"><i class="ds"></i><i class="ds"></i><i class="dt"></i></span><small>솔</small></span><span class="sc-n"><b>G</b><span class="sc-g"><i class="ds"></i><i class="ds"></i><i class="dt"></i></span><small>솔</small></span><span class="sc-n"><b>E</b><span class="sc-g"><i class="dt"></i></span><small>미</small></span><span class="sc-n"><b>T</b><span class="sc-g"><i class="ds"></i></span><small>~ 길게</small></span></div></div><div class="sc-line"><div class="sc-kor">솔 솔 미 미 레~</div><div class="sc-cells"><span class="sc-n"><b>G</b><span class="sc-g"><i class="ds"></i><i class="ds"></i><i class="dt"></i></span><small>솔</small></span><span class="sc-n"><b>G</b><span class="sc-g"><i class="ds"></i><i class="ds"></i><i class="dt"></i></span><small>솔</small></span><span class="sc-n"><b>E</b><span class="sc-g"><i class="dt"></i></span><small>미</small></span><span class="sc-n"><b>E</b><span class="sc-g"><i class="dt"></i></span><small>미</small></span><span class="sc-n"><b>D</b><span class="sc-g"><i class="ds"></i><i class="dt"></i><i class="dt"></i></span><small>레</small></span><span class="sc-n"><b>T</b><span class="sc-g"><i class="ds"></i></span><small>~ 길게</small></span></div></div></div><div class="sc-song"><div class="sc-head"><h3 class="use-h">떴다 떴다 비행기</h3><span class="note" style="border:0;padding:0">통째로: 모스로 <code class="hole">PLANE</code> 치기 · Serial <code class="hole">plane</code></span></div><div class="sc-line"><div class="sc-kor">미 레 도 레 미 미 미~</div><div class="sc-cells"><span class="sc-n"><b>E</b><span class="sc-g"><i class="dt"></i></span><small>미</small></span><span class="sc-n"><b>D</b><span class="sc-g"><i class="ds"></i><i class="dt"></i><i class="dt"></i></span><small>레</small></span><span class="sc-n"><b>C</b><span class="sc-g"><i class="ds"></i><i class="dt"></i><i class="ds"></i><i class="dt"></i></span><small>도</small></span><span class="sc-n"><b>D</b><span class="sc-g"><i class="ds"></i><i class="dt"></i><i class="dt"></i></span><small>레</small></span><span class="sc-n"><b>E</b><span class="sc-g"><i class="dt"></i></span><small>미</small></span><span class="sc-n"><b>E</b><span class="sc-g"><i class="dt"></i></span><small>미</small></span><span class="sc-n"><b>E</b><span class="sc-g"><i class="dt"></i></span><small>미</small></span><span class="sc-n"><b>T</b><span class="sc-g"><i class="ds"></i></span><small>~ 길게</small></span></div></div><div class="sc-line"><div class="sc-kor">레 레 레~ · 미 솔 솔~</div><div class="sc-cells"><span class="sc-n"><b>D</b><span class="sc-g"><i class="ds"></i><i class="dt"></i><i class="dt"></i></span><small>레</small></span><span class="sc-n"><b>D</b><span class="sc-g"><i class="ds"></i><i class="dt"></i><i class="dt"></i></span><small>레</small></span><span class="sc-n"><b>D</b><span class="sc-g"><i class="ds"></i><i class="dt"></i><i class="dt"></i></span><small>레</small></span><span class="sc-n"><b>T</b><span class="sc-g"><i class="ds"></i></span><small>~ 길게</small></span><span class="sc-sp">2초 쉼</span><span class="sc-n"><b>E</b><span class="sc-g"><i class="dt"></i></span><small>미</small></span><span class="sc-n"><b>G</b><span class="sc-g"><i class="ds"></i><i class="ds"></i><i class="dt"></i></span><small>솔</small></span><span class="sc-n"><b>G</b><span class="sc-g"><i class="ds"></i><i class="ds"></i><i class="dt"></i></span><small>솔</small></span><span class="sc-n"><b>T</b><span class="sc-g"><i class="ds"></i></span><small>~ 길게</small></span></div></div></div><div class="sc-song"><div class="sc-head"><h3 class="use-h">도레미파솔라시도</h3><span class="note" style="border:0;padding:0">통째로: 모스로 <code class="hole">SCALE</code> 치기 · Serial <code class="hole">scale</code></span></div><div class="sc-line"><div class="sc-kor">도 레 미 파 솔 라 시 도</div><div class="sc-cells"><span class="sc-n"><b>C</b><span class="sc-g"><i class="ds"></i><i class="dt"></i><i class="ds"></i><i class="dt"></i></span><small>도</small></span><span class="sc-n"><b>D</b><span class="sc-g"><i class="ds"></i><i class="dt"></i><i class="dt"></i></span><small>레</small></span><span class="sc-n"><b>E</b><span class="sc-g"><i class="dt"></i></span><small>미</small></span><span class="sc-n"><b>F</b><span class="sc-g"><i class="dt"></i><i class="dt"></i><i class="ds"></i><i class="dt"></i></span><small>파</small></span><span class="sc-n"><b>G</b><span class="sc-g"><i class="ds"></i><i class="ds"></i><i class="dt"></i></span><small>솔</small></span><span class="sc-n"><b>A</b><span class="sc-g"><i class="dt"></i><i class="ds"></i></span><small>라</small></span><span class="sc-n"><b>B</b><span class="sc-g"><i class="ds"></i><i class="dt"></i><i class="dt"></i><i class="dt"></i></span><small>시</small></span><span class="sc-n"><b>8</b><span class="sc-g"><i class="ds"></i><i class="ds"></i><i class="ds"></i><i class="dt"></i><i class="dt"></i></span><small>높은 도</small></span></div></div></div></div>
+  <p class="note">곡 이름(STAR · BELL · PLANE · SCALE)을 모스부호로 치고 5초 쉬어도 그 곡이 통째로 나와요. 음이 아닌 글자(예: SOS)만 친 문장은 연주하지 않아요.</p>
+</section>
+
 <section id="flow">
   <div class="sec-head"><h2>버튼을 누르면 무슨 일이</h2><p>다 꽂은 판에서 전기가 지나가는 길이에요.</p></div>
   <div class="board-wrap"><svg class="bb" data-step="7" viewBox="0 0 680 530" role="img" aria-label="버튼 신호와 LED 전류가 흐르는 길"></svg></div>
@@ -796,7 +816,7 @@ code.hole{background:var(--surface2);font-weight:500}
 </section>
 
 <section id="code">
-  <div class="code-head"><h2>코드 전체</h2><button class="btn" id="copy" type="button">코드 복사</button><span id="copied" class="note" style="border:0;padding:0" aria-live="polite"></span></div>
+  <div class="code-head"><h2>코드 전체 <span class="opt">morse_all.ino</span></h2><button class="btn" id="copy" type="button">코드 복사</button><span id="copied" class="note" style="border:0;padding:0" aria-live="polite"></span></div>
   <pre class="code"><code id="src">코드를 불러오는 중…</code></pre>
 </section>
 
@@ -939,9 +959,9 @@ M.forEach(function(code,i){const ch=i<26?String.fromCharCode(65+i):String(i-26);
 
 /* code */
 const src=document.getElementById('src');
-fetch('code/morse_machine.ino').then(function(r){if(!r.ok)throw new Error(r.status);return r.text();})
+fetch('code/morse_all.ino').then(function(r){if(!r.ok)throw new Error(r.status);return r.text();})
   .then(function(t){src.textContent=t;})
-  .catch(function(){src.textContent='코드를 불러오지 못했어요. morse_machine 폴더의 morse_machine.ino 파일을 열어 주세요.';});
+  .catch(function(){src.textContent='코드를 불러오지 못했어요. morse_all 폴더의 morse_all.ino 파일을 열어 주세요.';});
 document.getElementById('copy').addEventListener('click',function(){
   const msg=document.getElementById('copied');const t=src.textContent;
   function sel(){const r=document.createRange();r.selectNodeContents(src);const s=window.getSelection();s.removeAllRanges();s.addRange(r);msg.textContent='선택했어요. Cmd+C로 복사하세요.';}
