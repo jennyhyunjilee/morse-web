@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="상자 속 부품 사진과 배선도로 한 단계씩 만드는 아두이노 모스부호기 가이드">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <title>모스부호기 만들기</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap">
 <style>
 /* Layout: one reading column. Each step = my real part photos (left) beside the breadboard plan + checklist (right). */
@@ -295,7 +295,7 @@ code.hole{background:var(--surface2);font-weight:500}
     <a href="#parts">준비물</a><a href="#board">브레드보드</a><a href="#pins">핀 찾기</a>
     <a href="#step-1" data-s="1">1 GND</a><a href="#step-2" data-s="2">2 버튼</a><a href="#step-3" data-s="3">3 노랑 LED</a>
     <a href="#step-4" data-s="4">4 빨강·초록</a><a href="#step-5" data-s="5">5 부저</a><a href="#step-6" data-s="6">6 회전 센서</a>
-    <a href="#step-7" data-s="7">7 업로드</a><a href="#use">8 치는 법</a><a href="#two-btn">9 버튼 2개</a><a href="#sos-sound">10 SOS · 음 높이</a><a href="#harp">11 회전 센서</a><a href="#flow">전기 흐름</a><a href="#fix">안 될 때</a><a href="#morse">모스부호 표</a><a href="#code">코드</a>
+    <a href="#step-7" data-s="7">7 업로드</a><a href="#use">8 치는 법</a><a href="#two-btn">9 버튼 2개</a><a href="#sos-sound">10 SOS · 멜로디</a><a href="#harp">11 회전 센서</a><a href="#flow">전기 흐름</a><a href="#fix">안 될 때</a><a href="#morse">모스부호 표</a><a href="#code">코드</a>
   </nav>
 </header>
 
@@ -707,7 +707,7 @@ code.hole{background:var(--surface2);font-weight:500}
 </section>
 
 <section id="sos-sound">
-  <div class="step-head"><span class="step-no">10</span><div class="t"><h2>SOS 연습 · 음 높이 바꾸기</h2><p class="lede">버튼 2개로 칠 때 <code>?</code>가 나오는 두 가지 이유와, 부저 음 높이를 바꾸는 법이에요.</p></div></div>
+  <div class="step-head"><span class="step-no">10</span><div class="t"><h2>SOS 연습 · 음 높이 · 멜로디</h2><p class="lede">버튼 2개로 칠 때 <code>?</code>가 나오는 두 가지 이유와, 부저 음 높이를 바꾸는 법이에요.</p></div></div>
   <div class="use-grid">
     <div>
       <h3 class="use-h">SOS 치는 법 (버튼 2개)</h3>
@@ -733,9 +733,11 @@ code.hole{background:var(--surface2);font-weight:500}
         <div role="columnheader">기능</div><div role="columnheader">어떻게</div>
         <div><b>A</b> 점·대시 다른 음</div><div>점은 높게, 대시는 낮게(5도 아래). 귀로도 구분돼요</div>
         <div><b>B</b> 음 바꾸기</div><div><b>점 버튼 + 대시 버튼을 동시에</b> 눌렀다 떼기 → 원래 → 도 → 미 → 솔 → 높은 도 → 다시 원래. 초록이 세트 번호만큼 깜빡이고, 점 음 → 대시 음을 미리 들려줘요</div>
-        <div><b>C</b> 글자마다 음</div><div>글자가 확정될 때 그 글자의 음이 울려서 문장이 짧은 멜로디가 돼요. 끄려면 <code class="hole">LETTER_MELODY = false</code></div>
+        <div><b>C</b> 글자마다 음</div><div>글자가 확정되면 그 글자 음이 울려요. <b>A~G는 진짜 음이름</b>(C=도 D=레 E=미 F=파 G=솔 A=라 B=시), 숫자 1~8 = 도~높은 도. 모스부호로 <b>C C G G A A G</b>를 치면 '작은 별'이 돼요</div>
+        <div><b>♪</b> 멜로디 연주</div><div>Serial Monitor에 <code class="hole">star</code>(작은 별) · <code class="hole">bell</code>(학교종) · <code class="hole">scale</code>(도레미파솔라시도), 또는 <code class="hole">play CCGGAAG-</code>처럼 직접 악보 쓰기. 소문자 = 한 옥타브 위, <code class="hole">-</code> = 길게, <code class="hole">_</code> = 쉼. 버튼을 누르면 멈춰요</div>
       </div>
-      <pre class="out">[음 바꾸기] 솔  (점 784Hz · 대시 523Hz)</pre>
+      <pre class="out">[음 바꾸기] 솔  (점 784Hz · 대시 523Hz)
+&gt;&gt; 연주: CCGGAAG- FFEEDDC- …</pre>
       <p class="note">부저는 음 높이만 바꿀 수 있고 피아노·하프 같은 음색은 못 내요. 하프 소리는 <a href="play/">치기 페이지</a>에서 나요.</p>
     </div>
   </div>

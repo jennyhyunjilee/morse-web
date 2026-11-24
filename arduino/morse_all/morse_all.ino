@@ -35,7 +35,7 @@ const bool BUZZER_ACTIVE = false; // 음 높이가 안 바뀌는 부저(능동 �
 const bool TWO_BUTTONS   = true;  // 버튼 2개: 2번 = 점, 3번 = 대시(꾹). false면 버튼 1개로 짧게/길게
 const int  VOLUME        = 10;     // 소리 크기: 1(아주 작게) ~ 10(가장 크게). 회전 센서를 쓰면 센서가 정해요
 const int  BASE_FREQ     = 800;   // 모스부호기 소리 높이 (Hz) — 원래 높이
-const bool LETTER_MELODY = true;  // (C) 글자가 확정될 때마다 그 글자의 음을 짧게 울려요 → 문장이 멜로디가 돼요
+const bool LETTER_MELODY = true;  // (C) 글자가 확정될 때마다 그 글자의 음을 울려요. C=도 D=레 E=미 F=파 G=솔 A=라 B=시
 
 // (A)(B) 음 세트: [이름, 점 음, 대시 음]. 점은 높게, 대시는 낮게(5도 아래).
 // 점 버튼과 대시 버튼을 '동시에' 누르면 다음 세트로 바뀌어요.
@@ -446,12 +446,64 @@ bool handleDashButton(unsigned long now) {
   return false;
 }
 
-// (C) 글자마다 음: 라 단조 5음계 (STILL HERE '숨'과 같은 음계). ? 는 낮은 소리
-int letterNote(char c) {
-  if (c >= 'A' && c <= 'Z') return SCALE[(c - 'A') % 10] * 2;   // 한 옥타브 위라 부저에서 잘 들려요
-  if (c >= '0' && c <= '9') return SCALE[(c - '0') % 10] * 2;
-  return 196;
+// =============================================================
+//  음계 (도레미파솔라시) — 글자 음과 멜로디 연주에 함께 써요
+// =============================================================
+const int NOTE_HZ[7] = { 262, 294, 330, 349, 392, 440, 494 };   // 도 레 미 파 솔 라 시 (4옥타브)
+// 음이름 글자: C=도 D=레 E=미 F=파 G=솔 A=라 B=시
+int noteIndex(char c) {
+  if (c >= 'a' && c <= 'g') c = c - 'a' + 'A';
+  switch (c) { case 'C': return 0; case 'D': return 1; case 'E': return 2; case 'F': return 3;
+               case 'G': return 4; case 'A': return 5; case 'B': return 6; }
+  return -1;
 }
+
+// (C) 글자마다 음
+//  · A~G는 진짜 음이름 그대로 (C=도, D=레, E=미 …) → 모스부호로 C C G G A A G 를 치면 '작은 별'이 돼요
+//  · 숫자 1~8 = 도레미파솔라시도 (숫자 악보처럼)
+//  · 나머지 글자(H~Z)는 한 옥타브 위 도레미… 를 차례로
+int letterNote(char c) {
+  int k = noteIndex(c);
+  if (k >= 0) return NOTE_HZ[k] * 2;                          // 5옥타브: 부저에서 잘 들려요
+  if (c >= '1' && c <= '7') return NOTE_HZ[c - '1'] * 2;
+  if (c == '8') return NOTE_HZ[0] * 4;
+  if (c >= 'H' && c <= 'Z') return NOTE_HZ[(c - 'H') % 7] * 4;
+  if (c == '0') return NOTE_HZ[0];
+  return 196;                                                   // ? = 낮은 소리
+}
+
+// 멜로디 연주
+//  대문자 A~G = 도레미… (5옥타브) · 소문자 a~g = 한 옥타브 위 · 숫자 3~6 바로 앞 음의 옥타브 바꾸기는 안 써요
+//  '-' = 앞 음을 한 박 더 길게 · '_' = 한 박 쉼 · 그 밖의 글자(띄어쓰기, |)는 무시
+bool anyButtonDown();
+void playMelody(const char* m, unsigned int beat) {
+  Serial.print(F(">> 연주: ")); Serial.println(m);
+  for (int i = 0; m[i]; i++) {
+    if (anyButtonDown()) break;                                 // 버튼 누르면 멈춤
+    char c = m[i];
+    if (c == '_') { delay(beat); continue; }
+    int k = noteIndex(c);
+    if (k < 0) continue;
+    int f = NOTE_HZ[k] * ((c >= 'a' && c <= 'g') ? 4 : 2);
+    int len = 1;
+    while (m[i + 1] == '-') { len++; i++; }
+    unsigned int d = beat * len;
+    digitalWrite(DOT_LED, HIGH);
+    buzzerOn(f);
+    delay(d * 85 / 100);
+    buzzerOff();
+    digitalWrite(DOT_LED, LOW);
+    delay(d * 15 / 100);
+  }
+  digitalWrite(LETTER_LED, HIGH); delay(120); digitalWrite(LETTER_LED, LOW);
+  Serial.println(F(">> 연주 끝"));
+}
+bool anyButtonDown() { return digitalRead(BUTTON_PIN) == LOW || (TWO_BUTTONS && digitalRead(DASH_BUTTON_PIN) == LOW); }
+
+// 들어 있는 곡
+const char SONG_STAR[]  = "CCGGAAG- FFEEDDC- GGFFEED- GGFFEED- CCGGAAG- FFEEDDC-";        // 반짝반짝 작은 별
+const char SONG_BELL[]  = "GGAAGGE- GGEED--_ GGAAGGE- GEDEC--";                         // 학교종이 땡땡땡
+const char SONG_SCALE[] = "CDEFGABc- cBAGFEDC-";                                           // 도레미파솔라시도
 
 // (B) 점 버튼과 대시 버튼을 동시에 누르면 음 세트가 바뀌어요
 bool checkPitchChange(unsigned long now) {
@@ -557,6 +609,10 @@ void morseLoop() {
     String low = line; low.toLowerCase();
     if (low == "still") stillMode();
     else if (low == "new" || low == "clear") newSentence();
+    else if (low == "star")  playMelody(SONG_STAR, 330);           // 반짝반짝 작은 별
+    else if (low == "bell")  playMelody(SONG_BELL, 300);           // 학교종이 땡땡땡
+    else if (low == "scale") playMelody(SONG_SCALE, 260);          // 도레미파솔라시도
+    else if (low.startsWith("play ")) playMelody(line.c_str() + 5, 320);   // 내가 쓴 악보: play CCGGAAG-
     else if (low != "stop") sendText(line);
   }
 }
@@ -584,6 +640,7 @@ void setup() {
   if (USE_KNOB) { lastKnobRaw = analogRead(KNOB_PIN); knobVolume = min(10, (lastKnobRaw + 51) / 102); printKnob(lastKnobRaw); }
   Serial.println(F("새 문장: 5초 쉬기 (또는 new 입력)"));
   if (TWO_BUTTONS) Serial.println(F("음 바꾸기: 점 버튼 + 대시 버튼 동시에 (원래 → 도 → 미 → 솔 → 높은 도)"));
+  Serial.println(F("멜로디: star · bell · scale 입력, 또는 play CCGGAAG- (C=도 D=레 E=미 F=파 G=솔 A=라 B=시)"));
 }
 
 void loop() {
