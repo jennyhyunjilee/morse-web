@@ -31,7 +31,7 @@ const bool USE_KNOB      = true;  // 회전 센서(A0)로 소리 크기 조절. 
 const bool BUZZER_ON     = true;  // false면 부저는 조용 (소리는 웹사이트에서만)
 const bool BUZZER_ACTIVE = false; // 음 높이가 안 바뀌는 부저(능동 부저)면 true
 const bool TWO_BUTTONS   = true;  // 버튼 2개: 2번 = 점, 3번 = 대시(꾹). false면 버튼 1개로 짧게/길게
-const int  VOLUME        = 7;     // 소리 크기: 1(아주 작게) ~ 10(가장 크게). 회전 센서를 쓰면 센서가 정해요
+const int  VOLUME        = 10;     // 소리 크기: 1(아주 작게) ~ 10(가장 크게). 회전 센서를 쓰면 센서가 정해요
 const int  BASE_FREQ     = 800;   // 모스부호기 소리 높이 (Hz) — 원래 높이
 
 const bool STILL_1MIN    = true;  // STILL HERE 길이: true = 약 1분, false = 약 84초
@@ -102,8 +102,7 @@ void buzzerHW(int f) {
   int vol = volumeNow();
   if (!BUZZER_ON || vol <= 0) { timerStop(); return; }   // 소리 0 = 조용
   unsigned long period = 2000000UL / f;
-  unsigned long on = period * (6 + constrain(vol + 2, 1, 11) * 4) / 100;   // +2: 전체를 두 단계 더 크게
-  if (on > period / 2) on = period / 2;                                    // 50%가 가장 큰 소리
+  unsigned long on = period * (23 + constrain(vol, 1, 10) * 27 / 10) / 100;   // 1 = 26% · 10 = 50% (가장 큰 소리)
   noInterrupts();
   onTicks = on - 1;
   offTicks = period - on - 1;
