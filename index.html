@@ -133,6 +133,8 @@ section[id^="step-"] ol.todo li::before{counter-increment:t;content:counter(t);f
 .env-svg{width:100%;max-width:460px;display:block;margin:10px 0}
 .pin-move{width:100%;max-width:460px;display:block;margin:6px 0 10px;overflow:visible}
 #harp .why{margin:0 0 10px}#harp .check{margin:8px 0}#harp pre.out{white-space:pre-wrap;word-break:break-all}
+.fm-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;align-items:start}@media (max-width:760px){.fm-grid{grid-template-columns:1fr}}
+.fm-box{background:var(--surface2)}
 .use-grid.one{grid-template-columns:minmax(0,640px)}
 #sos-sound .why{margin:0 0 8px}.tb-wrap{max-width:520px}
 .tb-ard{fill:var(--surface2);stroke:var(--line)}.tb-board{fill:var(--board,#F4F2EC);stroke:var(--line)}
@@ -264,6 +266,7 @@ code.hole{background:var(--surface2);font-weight:500}
   #two-btn .tb-wrap{max-width:290px}
   #mic-rgb .tb-wrap{max-width:420px}
   #score pre.out{font-size:9.5px}
+  .fm-box{font-size:11.5px}.fm-box .photo img{max-height:90px;object-fit:cover}.fm-box .board-wrap{max-width:330px}
   #mic-rgb ol.todo li{padding:4px 10px;font-size:12px}
   #mic-rgb .check>div{padding:5px 10px;font-size:11.5px}
   #mic-rgb .side .photo img{max-height:120px;object-fit:contain}
@@ -833,6 +836,35 @@ C  C  G  G  A  A  G-  │ F  F  E  E  D  D  C-
         <li><span class="sw" style="--w:#2B2B2B"></span><span><code class="hole">b59</code>(GND) → 오른쪽 파란 <b>− 줄</b> → <kbd>→</kbd> Upload</span></li>
       </ol>
       <p class="why"><b>확인</b> 켜면 RGB가 <b>빨 → 초 → 파</b>로 한 번씩 켜져요. Serial Monitor에 <code class="hole">rgb</code> = 무지개 한 바퀴, <code class="hole">miclevel</code> = 4초 동안 소리 크기를 숫자·막대로 보여줘요(조용하면 한 자리, 박수·목소리면 수십 이상).</p>
+    </div>
+  </div>
+
+  <div class="why fm-box">
+    <div class="fm-grid">
+      <div><b>암-수 선(무지개 선)이 있으면: RGB 라이트는 판 없이 바로</b>
+        <p style="margin:6px 0 0">한쪽이 <b>구멍(암)</b>, 다른 쪽이 <b>핀(수)</b>인 선이에요. 구멍 쪽을 RGB 모듈 핀에 바로 끼우고, 핀 쪽을 아두이노에 꽂아요. 판 줄을 안 써서 헷갈릴 일이 줄어요.</p>
+        <ol class="steps-list" style="margin-top:6px">
+          <li><b>빨강</b> 선: 모듈 <b>R</b> → 아두이노 <b>10번</b></li>
+          <li><b>초록</b> 선: 모듈 <b>G</b> → <b>11번</b></li>
+          <li><b>파랑</b> 선: 모듈 <b>B</b> → <b>12번</b></li>
+          <li><b>주황</b> 선: 모듈 <b>GND</b> → 아두이노 <b>GND</b> (13번 옆 빈 GND)</li>
+        </ol>
+        <p class="note" style="margin-top:6px">남는 <b>노랑</b> 선 하나는 소리 센서 <b>AO → A1</b>에 써도 돼요. 소리 센서는 5V·GND를 판에서 나눠 써야 해서 위 배선도처럼 판에 꽂는 게 편해요.</p>
+      </div>
+      <div><figure class="photo" style="margin:0"><img src="img/fm_wires.jpg" alt="빨강 주황 노랑 초록 파랑 암-수 점퍼선"><figcaption>내 암-수 선 5개 (왼쪽 구멍 = 암, 오른쪽 핀 = 수)</figcaption></figure>
+        <div class="board-wrap" style="margin-top:8px"><svg class="tb-svg" viewBox="0 0 520 190" role="img" aria-label="RGB 라이트를 암-수 선으로 아두이노에 바로 연결">
+<rect x="8" y="20" width="150" height="150" rx="10" fill="#222"/><circle cx="83" cy="52" r="16" fill="#E8E6F0" opacity=".85"/>
+<text x="83" y="100" text-anchor="middle" font-size="13" fill="#fff" font-weight="700">RGB 라이트</text>
+<g font-family="JetBrains Mono, monospace" font-size="11" fill="#fff"><text x="30" y="160">R</text><text x="62" y="160">G</text><text x="94" y="160">B</text><text x="120" y="160">GND</text></g>
+<rect x="360" y="16" width="152" height="160" rx="10" class="tb-ard"/><text x="436" y="36" text-anchor="middle" class="tb-b">Arduino UNO</text>
+<g font-family="JetBrains Mono, monospace" font-size="12" fill="var(--ink)"><text x="420" y="66">10번</text><text x="420" y="96">11번</text><text x="420" y="126">12번</text><text x="420" y="156">GND (13번 옆)</text></g>
+<path d="M33,150 C140,150 300,62 410,62" fill="none" stroke="#E0483C" stroke-width="5" stroke-linecap="round"/>
+<path d="M65,150 C160,150 300,92 410,92" fill="none" stroke="#2FA35A" stroke-width="5" stroke-linecap="round"/>
+<path d="M97,150 C180,150 300,122 410,122" fill="none" stroke="#2F6FD6" stroke-width="5" stroke-linecap="round"/>
+<path d="M130,150 C200,160 300,152 410,152" fill="none" stroke="#F08A24" stroke-width="5" stroke-linecap="round"/>
+<g fill="#111"><rect x="26" y="140" width="14" height="12" rx="2"/><rect x="58" y="140" width="14" height="12" rx="2"/><rect x="90" y="140" width="14" height="12" rx="2"/><rect x="123" y="140" width="14" height="12" rx="2"/></g>
+<text x="210" y="186" text-anchor="middle" font-size="11" fill="var(--muted)">구멍 쪽(암) = 모듈 핀에 · 핀 쪽(수) = 아두이노에</text>
+</svg></div></div>
     </div>
   </div>
   <div class="use-grid">
