@@ -126,6 +126,7 @@ section[id^="step-"] ol.todo li::before{counter-increment:t;content:counter(t);f
 .env-svg{width:100%;max-width:460px;display:block;margin:10px 0}
 .pin-move{width:100%;max-width:460px;display:block;margin:6px 0 10px;overflow:visible}
 #harp .why{margin:0 0 10px}#harp .check{margin:8px 0}#harp pre.out{white-space:pre-wrap;word-break:break-all}
+.use-grid.one{grid-template-columns:minmax(0,640px)}
 #sos-sound .why{margin:0 0 8px}.tb-wrap{max-width:520px}
 .tb-ard{fill:var(--surface2);stroke:var(--line)}.tb-board{fill:var(--board,#F4F2EC);stroke:var(--line)}
 .tb-h{fill:var(--hole,#B9B5AA)}.tb-rm{stroke:#5B8DEF;stroke-width:1.2;opacity:.7}.tb-rp{stroke:#E06C6C;stroke-width:1.2;opacity:.7}
@@ -241,7 +242,7 @@ pre.code{margin:0;font:13px/1.55 var(--mono);background:var(--surface);border:1p
     <a href="#parts">준비물</a><a href="#board">브레드보드</a><a href="#pins">핀 찾기</a>
     <a href="#step-1" data-s="1">1 GND</a><a href="#step-2" data-s="2">2 버튼</a><a href="#step-3" data-s="3">3 노랑 LED</a>
     <a href="#step-4" data-s="4">4 빨강·초록</a><a href="#step-5" data-s="5">5 부저</a><a href="#step-6" data-s="6">6 회전 센서</a>
-    <a href="#step-7" data-s="7">7 업로드</a><a href="#use">8 치는 법</a><a href="#two-btn">9 버튼 2개</a><a href="#sos-sound">10 SOS 연습</a><a href="#harp">11 하프 소리·센서</a><a href="#flow">전기 흐름</a><a href="#fix">안 될 때</a><a href="#morse">모스부호 표</a><a href="#code">코드</a>
+    <a href="#step-7" data-s="7">7 업로드</a><a href="#use">8 치는 법</a><a href="#two-btn">9 버튼 2개</a><a href="#sos-sound">10 SOS 연습</a><a href="#harp">11 회전 센서</a><a href="#flow">전기 흐름</a><a href="#fix">안 될 때</a><a href="#morse">모스부호 표</a><a href="#code">코드</a>
   </nav>
 </header>
 
@@ -473,7 +474,7 @@ pre.code{margin:0;font:13px/1.55 var(--mono);background:var(--surface);border:1p
 </section>
 
 <section id="step-5">
-  <div class="step-head"><span class="step-no">5</span><div class="t"><h2>부저</h2><p class="lede">삐- 소리를 내요. 지금 판 아래쪽에 꽂힌 걸 옮겨요. (하프 소리 코드 <code class="hole">morse_all</code>을 쓰면 파란 선은 <b>11번</b>, 11단계 참고)</p></div><label class="done-box"><input type="checkbox" id="done-5" data-s="5"> 다 꽂았어요</label></div>
+  <div class="step-head"><span class="step-no">5</span><div class="t"><h2>부저</h2><p class="lede">삐- 소리를 내요. 지금 판 아래쪽에 꽂힌 걸 옮겨요.</p></div><label class="done-box"><input type="checkbox" id="done-5" data-s="5"> 다 꽂았어요</label></div>
   <div class="step-grid">
     <div class="side">
       <figure class="photo"><img src="img/buzzer.jpg" alt="판에 꽂힌 검은 부저"><figcaption>지금 내 부저. 윗면에 + 표시가 보여요</figcaption></figure>
@@ -675,40 +676,18 @@ pre.code{margin:0;font:13px/1.55 var(--mono);background:var(--surface);border:1p
     </div>
     <div>
       <h3 class="use-h">부저 소리 바꾸기</h3>
-      <p class="why"><b>하프·피아노·화음 소리는 11단계에 있어요.</b> 새 <code class="hole">morse_all.ino</code>는 아두이노가 줄을 튕기는 소리를 직접 계산해서 부저로 내요. 대신 부저 선을 <b>8번 → 11번</b>으로 옮겨야 해요.</p>
-      <p class="note">웹사이트(<a href="https://jennyhyunjilee.github.io/morse-web/" target="_blank" rel="noopener">jennyhyunjilee.github.io/morse-web</a>)에서는 하프 녹음 소리로도 칠 수 있어요.</p>
+      <p class="why"><b>부저는 삐 소리 하나만 내요.</b> 부저는 한 가지 떨림만 내는 부품이라 피아노·하프 소리는 안 나요. 소리 크기는 회전 센서로 바꿔요 (11단계).</p>
+      <p class="note">하프·피아노 소리로 치고 싶으면 웹사이트(<a href="https://jennyhyunjilee.github.io/morse-web/" target="_blank" rel="noopener">jennyhyunjilee.github.io/morse-web</a>)를 써요.</p>
     </div>
   </div>
 </section>
 
 <section id="harp">
-  <div class="step-head"><span class="step-no">11</span><div class="t"><h2>아두이노에서 하프·피아노 소리 · 회전 센서 숫자</h2><p class="lede">아두이노가 1초에 16000번 계산해서 <b>줄을 튕기는 소리</b>를 만들어요. 부저 선 하나만 옮기면 돼요.</p></div></div>
-  <div class="use-grid">
+  <div class="step-head"><span class="step-no">11</span><div class="t"><h2>회전 센서 = 소리 크기 (숫자로 보기)</h2><p class="lede">회전 센서를 돌리면 부저 소리가 커지고 작아져요. 얼마나 돌렸는지 Serial Monitor에 숫자와 막대로 보여요.</p></div></div>
+  <div class="use-grid one">
     <div>
-      <h3 class="use-h">① 부저 선 옮기기: 8번 → 11번</h3>
-      <svg class="pin-move" viewBox="0 0 460 110" role="img" aria-label="파란 선을 8번 핀에서 11번 핀으로 옮기기">
-        <rect x="10" y="30" width="440" height="34" rx="6" fill="#1F4E8C"/>
-        <g font-family="IBM Plex Mono, monospace" font-size="12" fill="#fff" text-anchor="middle">
-          <text x="40" y="52">GND</text><text x="80" y="52">13</text><text x="120" y="52">12</text><text x="160" y="52" font-weight="700">11</text><text x="200" y="52">10</text><text x="240" y="52">9</text><text x="280" y="52">8</text><text x="320" y="52">7</text><text x="360" y="52">6</text><text x="400" y="52">5</text></g>
-        <circle cx="280" cy="22" r="9" fill="none" stroke="#C0392B" stroke-width="2.5"/><text x="280" y="12" text-anchor="middle" font-size="11" fill="#C0392B" font-weight="700">빼기</text>
-        <circle cx="160" cy="22" r="9" fill="#2F6FD6"/><text x="160" y="12" text-anchor="middle" font-size="11" fill="#2F6FD6" font-weight="700">꽂기</text>
-        <path d="M268,22 C230,-2 196,-2 172,18" fill="none" stroke="#2F6FD6" stroke-width="2.5" stroke-dasharray="5 4" marker-end="url(#ar)"/>
-        <defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2F6FD6"/></marker></defs>
-        <text x="230" y="90" text-anchor="middle" font-size="12.5" fill="var(--ink)">파란 선(부저 +)의 아두이노 쪽 끝만 옮겨요. 판 쪽 <tspan font-family="IBM Plex Mono, monospace">f33</tspan>은 그대로</text>
-      </svg>
-      <p class="why"><b>왜 11번?</b> 11번은 아주 빠르게 켜고 끌 수 있는 핀(PWM)이라, 계산한 소리 모양을 부저로 내보낼 수 있어요. 8번은 그게 안 돼요. 선을 안 옮기면 <b>소리가 안 나요.</b></p>
-      <h3 class="use-h">② 소리 고르기: <code class="hole">SOUND_STYLE</code></h3>
-      <div class="check" role="table" aria-label="SOUND_STYLE 값">
-        <div role="columnheader">값</div><div role="columnheader">소리</div>
-        <div><code class="hole">0</code></div><div>삐 (네모난 소리)</div>
-        <div><code class="hole">1</code> 기본</div><div><b>하프</b>: 부드럽게 띵~ 하고 잦아들어요</div>
-        <div><code class="hole">2</code></div><div><b>피아노</b>: 조금 더 밝고 오래 울려요</div>
-        <div><code class="hole">3</code></div><div><b>화음</b>: 도·미·솔 세 줄을 한꺼번에 튕겨요</div>
-      </div>
-      <p class="note">작은 부저라 실제 악기보다 가늘게 들려요. 더 풍성한 소리를 원하면 부저 대신 작은 스피커(8Ω)를 같은 자리에 꽂아도 돼요.</p>
-    </div>
-    <div>
-      <h3 class="use-h">③ 회전 센서 = 소리 크기 (숫자로 보기)</h3>
+      <h3 class="use-h">돌리면 이렇게 보여요</h3>
+      <p class="why"><b>보드에서 바로:</b> 손잡이를 돌릴 때마다 <b>노란 LED 밝기</b>가 지금 소리 크기만큼 켜지고, 그 크기로 <b>"삑"</b> 소리가 나요. Serial Monitor를 안 열어도 알 수 있어요. (STILL HERE 도중에는 작품을 방해하지 않게 조용히 크기만 바뀌어요.)</p>
       <p>회전 센서(6단계, A0)를 돌리면 소리가 커지고 작아져요. <b>Serial Monitor</b>(9600 baud)를 열면 켤 때 한 번, 그리고 돌릴 때마다 지금 위치가 떠요.</p>
       <pre class="out">[회전 센서] 소리 크기 7/10  ■■■■■■■□□□  (센서 값 714 / 1023)</pre>
       <div class="check" role="table" aria-label="회전 센서 숫자 뜻">
@@ -717,7 +696,7 @@ pre.code{margin:0;font:13px/1.55 var(--mono);background:var(--surface);border:1p
         <div>■■■■■■■□□□</div><div>소리 크기를 막대로</div>
         <div>센서 값 <b>714</b> / 1023</div><div>손잡이가 실제로 돌아간 정도 (0~1023)</div>
       </div>
-      <p class="why"><b>소리가 안 나요?</b> ① 파란 선이 11번에 있는지 ② 회전 센서가 0(끝까지 왼쪽)이 아닌지 ③ Serial Monitor 맨 위에 <code>[회전 센서]</code> 줄이 보이는지(안 보이면 아직 예전 코드) 확인해요.</p>
+      <p class="why"><b>소리가 안 나요?</b> ① 파란 선이 8번에 있는지 ② 회전 센서가 0(끝까지 왼쪽)이 아닌지 ③ Serial Monitor 맨 위에 <code>[회전 센서]</code> 줄이 보이는지(안 보이면 아직 예전 코드) 확인해요.</p>
       <p class="note">회전 센서가 없으면 코드 위쪽 <code class="hole">USE_KNOB</code>를 <code class="hole">false</code>로, 크기는 <code class="hole">VOLUME</code>(0~10)으로 정해요. 웹사이트에 연결하면 같은 숫자가 바늘 그림으로 보여요.</p>
     </div>
   </div>
