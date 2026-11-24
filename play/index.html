@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Morse — 모스부호기</title>
+<meta name="description" content="점과 대시로 치면 하프·피아노 소리로 울리는 모스부호기. 아두이노 연결, STILL HERE.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FAFAF8;--fg:#111111;--mid:#6B6B6B;--soft:#A3A3A0;--line:#E7E6E2;--fill:#F1F0EC;--card:#FFFFFF;
+--y:#F5B800;--r:#F0432C;--g:#1FAA59;--acc:#111111;--sans:'Pretendard Variable',Pretendard,-apple-system,system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0E0E0D;--fg:#F2F2EF;--mid:#9A9A96;--soft:#5E5E5B;--line:#232321;--fill:#181817;--card:#141413;--acc:#F2F2EF}}
+:root[data-theme=dark]{--bg:#0E0E0D;--fg:#F2F2EF;--mid:#9A9A96;--soft:#5E5E5B;--line:#232321;--fill:#181817;--card:#141413;--acc:#F2F2EF}
+*{box-sizing:border-box}html{scroll-behavior:smooth}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.6;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+a{color:inherit}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px}
+/* 상단 */
+.nav{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:56px;gap:16px}
+.logo{font-family:var(--mono);font-weight:600;letter-spacing:.02em;text-decoration:none;display:flex;align-items:center;gap:10px}
+.logo i{display:inline-block;background:var(--fg);border-radius:99px;height:6px}
+.nav ul{display:flex;gap:2px;list-style:none;margin:0;padding:0;overflow-x:auto;scrollbar-width:none}
+.nav ul a{display:block;padding:6px 10px;border-radius:8px;text-decoration:none;color:var(--mid);font-size:14px;white-space:nowrap}
+.nav ul a:hover{color:var(--fg);background:var(--fill)}
+@media (max-width:640px){.nav .wrap{height:auto;flex-direction:column;align-items:flex-start;padding-top:10px;padding-bottom:6px;gap:4px}.nav ul{width:100%}}
+section{padding:56px 0;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--mono);font-size:12px;color:var(--soft);letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px}
+h1{font-size:clamp(30px,5vw,44px);line-height:1.15;letter-spacing:-.03em;margin:0 0 10px;font-weight:700}
+h2{font-size:24px;letter-spacing:-.02em;margin:0 0 6px;font-weight:700}
+.lead{color:var(--mid);margin:0 0 28px;max-width:560px}
+/* 치기 */
+.display{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px}
+.leds{display:flex;gap:18px;align-items:center;margin-bottom:18px}
+.led{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--mid)}
+.led i{width:12px;height:12px;border-radius:50%;background:var(--c);opacity:.18;transition:opacity .05s,box-shadow .05s}
+.led.on i{opacity:1;box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 22%,transparent),0 0 18px var(--c)}
+.msg{font-family:var(--mono);font-size:clamp(30px,6vw,52px);font-weight:500;letter-spacing:.08em;min-height:1.3em;line-height:1.25;word-break:break-all}
+.msg .q{color:var(--r)}.msg .cursor{opacity:.25;animation:bl 1s steps(1) infinite}@keyframes bl{50%{opacity:0}}
+.cur{display:flex;gap:14px;align-items:baseline;min-height:30px;margin-top:6px}
+.code{font-family:var(--mono);font-size:22px;letter-spacing:.2em;color:var(--y)}
+.hint{font-size:13px;color:var(--r)}
+.gap{margin-top:14px}.gap .bar{height:3px;background:var(--fill);border-radius:9px;overflow:hidden}.gap .bar b{display:block;height:100%;width:0;background:var(--fg);opacity:.55}
+.gap .lab{display:flex;justify-content:space-between;font-size:11px;color:var(--soft);margin-top:6px;font-family:var(--mono)}
+.hist{font-size:12.5px;color:var(--soft);margin-top:8px;min-height:1.2em}
+.keys{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 0}
+.key{user-select:none;-webkit-user-select:none;touch-action:none;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:20px;height:140px;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;transition:transform .06s,background .1s,border-color .1s}
+.key:hover{border-color:var(--soft)}
+.key .sym{display:block;background:var(--fg)}
+.key.dot .sym{width:18px;height:18px;border-radius:50%}.key.dash .sym{width:58px;height:14px;border-radius:9px}
+.key.single .sym{width:22px;height:22px;border-radius:50%}
+.key small{font-size:13px;color:var(--mid)}.key kbd{font-family:var(--mono);font-size:11px;color:var(--soft);border:1px solid var(--line);padding:0 6px;border-radius:5px;margin-left:4px}
+.key.down{transform:scale(.985);background:var(--fill)}
+.key.dot.down .sym{background:var(--y)}.key.dash.down .sym{background:var(--r)}
+.key.single{grid-column:1/-1}
+.toolbar{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-end;margin-top:22px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field>span{font-size:12px;color:var(--soft)}
+.seg{display:inline-flex;background:var(--fill);border-radius:10px;padding:3px;flex-wrap:wrap}
+.seg label{cursor:pointer}.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:block;padding:5px 11px;border-radius:8px;font-size:13.5px;color:var(--mid)}
+.seg input:checked+span{background:var(--card);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.seg input:focus-visible+span{outline:2px solid var(--fg)}
+.vol{display:flex;align-items:center;gap:10px;min-width:180px}.vol output{font-family:var(--mono);font-size:13px;color:var(--mid);min-width:3em}
+input[type=range]{width:100%;accent-color:var(--fg)}
+.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:9px 16px;border-radius:10px;cursor:pointer}
+.btn:hover{border-color:var(--soft)}.btn.primary{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.note{font-size:13px;color:var(--soft)}
+code{font-family:var(--mono);font-size:.9em;background:var(--fill);padding:1px 6px;border-radius:5px}
+/* 보내기 */
+.send{display:flex;gap:8px;max-width:560px}
+.send input{flex:1;font:inherit;font-family:var(--mono);font-size:18px;letter-spacing:.06em;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--fg);text-transform:uppercase}
+.send input:focus{outline:none;border-color:var(--fg)}
+.sendcode{font-family:var(--mono);font-size:16px;margin-top:14px;min-height:1.5em;letter-spacing:.08em;color:var(--soft);word-break:break-all}.sendcode b{color:var(--fg)}
+/* STILL */
+.stage{position:relative;border-radius:20px;overflow:hidden;background:#000;aspect-ratio:16/9;touch-action:none;user-select:none}
+.stage canvas{width:100%;height:100%;display:block}
+.stage .hold{position:absolute;inset:auto 0 14px 0;text-align:center;color:#777;font-size:12.5px;pointer-events:none}
+.stage .paused{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#ddd;font-family:var(--mono);letter-spacing:.4em;font-size:13px}
+.stage.is-paused .paused{display:flex}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.connect{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:-8px 0 20px}
+.btn.big{font-size:16px;padding:12px 22px;border-radius:12px}
+.display.live{border-color:var(--g);box-shadow:0 0 0 3px color-mix(in srgb,var(--g) 15%,transparent)}
+/* 아두이노 */
+.ard{display:grid;grid-template-columns:1fr 1fr;gap:28px}@media (max-width:760px){.ard{grid-template-columns:1fr}}
+.status{font-family:var(--mono);font-size:12.5px;color:var(--mid);display:inline-flex;align-items:center;gap:6px}
+.status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--soft)}.status.ok::before{background:var(--g)}
+ol.steps{padding-left:18px;margin:16px 0 0;color:var(--mid)}ol.steps li{margin:6px 0}ol.steps b{color:var(--fg)}
+.knob{display:flex;align-items:center;gap:20px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px}
+.knob svg{width:110px;height:110px;flex:none}
+.knob .val{font-family:var(--mono);font-size:34px;font-weight:600;line-height:1}
+.knob .raw{font-family:var(--mono);font-size:12px;color:var(--soft);margin-top:6px}
+.meter{display:flex;gap:3px;margin-top:10px}.meter i{width:12px;height:16px;border-radius:3px;background:var(--fill)}.meter i.on{background:var(--fg)}
+pre.log{background:var(--fill);color:var(--mid);border-radius:14px;padding:12px 14px;font-family:var(--mono);font-size:12px;height:160px;overflow:auto;margin:14px 0 0;white-space:pre-wrap}
+/* 모스부호 표 */
+.tlabel{font-family:var(--mono);font-size:12px;color:var(--soft);letter-spacing:.08em;margin:0 0 10px}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px;margin-bottom:28px}
+.mc{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 14px 12px;display:flex;flex-direction:column;align-items:flex-start;gap:10px;cursor:pointer;text-align:left;transition:border-color .12s,opacity .12s,transform .12s}
+.mc:hover{border-color:var(--soft)}
+.mc b{font-size:30px;line-height:1;font-weight:700;letter-spacing:-.02em}
+.mc .g{display:flex;gap:6px;align-items:center;height:14px}
+.mc .dt{width:10px;height:10px;border-radius:50%;background:var(--fg)}
+.mc .ds{width:28px;height:10px;border-radius:6px;background:var(--fg)}
+.mc small{font-family:var(--mono);font-size:12px;color:var(--soft);letter-spacing:.1em}
+.mc.cand{border-color:var(--y)}.mc.exact{border-color:var(--g);box-shadow:0 0 0 3px color-mix(in srgb,var(--g) 18%,transparent)}
+.mc.dim{opacity:.32}.mc.play{transform:translateY(-2px);border-color:var(--fg)}
+footer{color:var(--soft);font-size:13px;padding:36px 0 56px}
+</style>
+</head>
+<body>
+<nav class="nav"><div class="wrap">
+  <a class="logo" href="#top"><span style="display:flex;gap:4px;align-items:center"><i style="width:6px"></i><i style="width:18px"></i><i style="width:6px"></i></span>Morse</a>
+  <ul><li><a href="#key">치기</a></li><li><a href="#table">표</a></li><li><a href="#send">보내기</a></li><li><a href="#still">STILL HERE</a></li><li><a href="#arduino">보드 상태</a></li><li><a href="../">만들기 가이드</a></li><li><a href="../guide.pdf" target="_blank" rel="noopener">PDF</a></li></ul>
+</div></nav>
+
+<main class="wrap" id="top">
+<section id="key" style="padding-top:44px">
+  <p class="eyebrow">Morse key</p>
+  <h1>내 보드로 치면 여기에 써져요</h1>
+  <p class="lead">보드를 연결하고 점 버튼·대시 버튼(꾹)으로 치면 아래 화면에 글자가 써지고, 하프·피아노 소리로도 울려요. 보드 없이 화면 버튼으로 칠 수도 있어요.</p>
+  <div class="connect">
+    <button class="btn primary big" id="connBtn">🔌 보드 연결</button>
+    <span class="status" id="connStat">연결 안 됨</span>
+    <span class="note">Chrome·Edge에서 돼요 · 연결 전에 Arduino IDE를 꺼 주세요 · 처음 한 번 <code>usbmodem…</code>을 골라요</span>
+  </div>
+  <div class="display" aria-live="polite">
+    <div class="leds" aria-hidden="true">
+      <div class="led" id="ledY" style="--c:var(--y)"><i></i>점</div>
+      <div class="led" id="ledR" style="--c:var(--r)"><i></i>대시</div>
+      <div class="led" id="ledG" style="--c:var(--g)"><i></i>글자 확정</div>
+    </div>
+    <div class="msg" id="msg"></div>
+    <div class="cur"><span class="code" id="code"></span><span class="hint" id="hint"></span></div>
+    <div class="gap" aria-hidden="true"><div class="bar"><b id="gapbar"></b></div><div class="lab"><span>0</span><span id="lgLab">글자</span><span>띄어쓰기 2s</span><span>새 문장 5s</span></div></div>
+    <div class="hist" id="hist"></div>
+  </div>
+  <p class="tlabel" style="margin-top:22px">화면 버튼 (보드 없이 칠 때)</p>
+  <div class="keys" id="keys2" style="margin-top:0">
+    <button class="key dot" id="kDot" aria-label="점 버튼"><span class="sym"></span><small>점<kbd>J</kbd></small></button>
+    <button class="key dash" id="kDash" aria-label="대시 버튼, 꾹 누르기"><span class="sym"></span><small>대시 · 꾹<kbd>K</kbd></small></button>
+  </div>
+  <div class="keys" id="keys1" hidden>
+    <button class="key single" id="kOne" aria-label="모스 키: 짧게 점, 길게 대시"><span class="sym"></span><small>짧게 점 · 길게 대시<kbd>Space</kbd></small></button>
+  </div>
+  <div class="toolbar">
+    <div class="field"><span>소리</span><div class="seg" role="radiogroup" aria-label="소리">
+      <label><input type="radio" name="inst" value="harp" checked><span>하프</span></label>
+      <label><input type="radio" name="inst" value="piano"><span>피아노</span></label>
+      <label><input type="radio" name="inst" value="chord"><span>화음</span></label>
+      <label><input type="radio" name="inst" value="box"><span>오르골</span></label>
+      <label><input type="radio" name="inst" value="beep"><span>삐</span></label></div></div>
+    <div class="field"><span>음 높이</span><div class="seg" role="radiogroup" aria-label="음 높이">
+      <label><input type="radio" name="pitch" value="low"><span>낮게</span></label>
+      <label><input type="radio" name="pitch" value="mid" checked><span>보통</span></label>
+      <label><input type="radio" name="pitch" value="high"><span>높게</span></label></div></div>
+    <div class="field"><span>버튼</span><div class="seg" role="radiogroup" aria-label="버튼 방식">
+      <label><input type="radio" name="mode" value="two" checked><span>2개</span></label>
+      <label><input type="radio" name="mode" value="one"><span>1개</span></label></div></div>
+    <div class="field"><span>볼륨 <span id="volSrc"></span></span><div class="vol"><input type="range" id="vol" min="0" max="10" value="6" aria-label="볼륨"><output id="volOut">6/10</output></div></div>
+    <button class="btn" id="newBtn">새 문장</button>
+  </div>
+</section>
+
+<section id="table">
+  <p class="eyebrow">Reference</p>
+  <h2>모스부호 표</h2>
+  <p class="lead">카드를 누르면 소리로 들려줘요. 치는 동안에는 지금까지 친 점·대시로 될 수 있는 글자만 밝게, 딱 맞는 글자는 초록 테두리로 보여요.</p>
+  <div id="mtab"></div>
+</section>
+
+<section id="send">
+  <p class="eyebrow">Transmit</p>
+  <h2>보내기</h2>
+  <p class="lead">영어·숫자를 쓰면 모스부호로 바꿔 빛과 소리로 보내요.</p>
+  <form class="send" id="sendForm"><input id="sendIn" maxlength="40" placeholder="SOS" autocomplete="off" aria-label="보낼 글자"><button class="btn primary">보내기</button></form>
+  <div class="sendcode" id="sendCode"></div>
+</section>
+
+<section id="still">
+  <p class="eyebrow">Work</p>
+  <h2>STILL HERE</h2>
+  <p class="lead">신호 → 과잉 → 임계점 → 정적 → 숨. 화면이나 <code>Space</code>를 누르고 있으면 그 자리에서 멈춰요(여백).</p>
+  <div class="stage" id="stage"><canvas id="cv" width="960" height="540" aria-label="STILL HERE 무대"></canvas><div class="paused">( 여 백 )</div><div class="hold" id="stageHint">▶ 시작을 누르세요</div></div>
+  <div class="row" style="margin-top:16px">
+    <button class="btn primary" id="stillPlay">▶ 시작</button>
+    <div class="seg" role="radiogroup" aria-label="길이"><label><input type="radio" name="slen" value="short" checked><span>1분</span></label><label><input type="radio" name="slen" value="long"><span>84초</span></label></div>
+    <span class="note">작은 빛만 깜빡여요. 화면 전체가 번쩍이지는 않아요.</span>
+  </div>
+</section>
+
+<section id="arduino">
+  <p class="eyebrow">Hardware</p>
+  <h2>보드 상태</h2>
+  <p class="lead">위에서 보드를 연결하면 회전 센서 값과 보드가 보낸 글이 여기에 보여요.</p>
+  <div class="ard">
+    <div>
+      <ol class="steps">
+        <li><a href="../arduino/morse_all/morse_all.ino" download>morse_all.ino</a>를 아두이노에 올려요.</li>
+        <li><b>Arduino IDE의 Serial Monitor를 닫아요.</b> 열려 있으면 연결이 안 돼요.</li>
+        <li>맨 위 <b>🔌 보드 연결</b> → 목록에서 <code>usbmodem…</code> 선택.</li>
+        <li>회전 센서 = 소리 크기. 돌리면 오른쪽 숫자가 바뀌어요.</li>
+      </ol>
+      <p class="note" id="serialNote"></p>
+    </div>
+    <div>
+      <div class="knob">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle cx="60" cy="60" r="46" fill="none" stroke="var(--fill)" stroke-width="8" stroke-dasharray="216.8 72.3" transform="rotate(135 60 60)" stroke-linecap="round"/>
+          <circle id="knobArc" cx="60" cy="60" r="46" fill="none" stroke="var(--fg)" stroke-width="8" stroke-dasharray="0 289" transform="rotate(135 60 60)" stroke-linecap="round"/>
+          <line id="knobNeedle" x1="60" y1="60" x2="60" y2="28" stroke="var(--fg)" stroke-width="3" stroke-linecap="round" transform="rotate(-135 60 60)"/>
+          <circle cx="60" cy="60" r="5" fill="var(--fg)"/>
+        </svg>
+        <div><div class="note" style="margin-bottom:4px">회전 센서 · 소리 크기</div><div class="val" id="knobVal">–/10</div><div class="raw" id="knobRaw">센서 값 – / 1023</div><div class="meter" id="knobMeter"></div><div class="note" id="knobWhen" style="margin-top:8px">연결하고 손잡이를 돌려 보세요.</div></div>
+      </div>
+      <pre class="log" id="log" aria-label="아두이노가 보낸 글"></pre>
+    </div>
+  </div>
+</section>
+</main>
+<footer class="wrap">하프 소리: Freesound 커뮤니티 녹음 (harp D4) · 피아노·오르골·화음은 브라우저에서 만든 소리 · <a href="../">만들기 가이드</a></footer>
+<script>
+'use strict';
+const MORSE={A:".-",B:"-...",C:"-.-.",D:"-..",E:".",F:"..-.",G:"--.",H:"....",I:"..",J:".---",K:"-.-",L:".-..",M:"--",N:"-.",O:"---",P:".--.",Q:"--.-",R:".-.",S:"...",T:"-",U:"..-",V:"...-",W:".--",X:"-..-",Y:"-.--",Z:"--..",
+"0":"-----","1":".----","2":"..---","3":"...--","4":"....-","5":".....","6":"-....","7":"--...","8":"---..","9":"----."};
+const REV=Object.fromEntries(Object.entries(MORSE).map(([k,v])=>[v,k]));
+const $=id=>document.getElementById(id);
+
+/* ======================= 소리 ======================= */
+let ctx=null, master=null, revIn=null, harpBuf=null;
+const active=new Set();
+const cache=new Map();
+let volume=0.6;
+function inst(){return document.querySelector('input[name=inst]:checked').value}
+function pitchSet(){const p=document.querySelector('input[name=pitch]:checked').value;
+  return p==='low'?[440,293.66]:p==='high'?[880,587.33]:[659.25,440];}
+
+async function audio(){
+  if(ctx){ if(ctx.state==='suspended') await ctx.resume(); return ctx; }
+  ctx=new (window.AudioContext||window.webkitAudioContext)();
+  master=ctx.createGain(); master.gain.value=volume;
+  const comp=ctx.createDynamicsCompressor(); comp.threshold.value=-14; comp.ratio.value=3;
+  master.connect(comp).connect(ctx.destination);
+  // 잔향
+  const conv=ctx.createConvolver(); const len=Math.floor(ctx.sampleRate*2.4);
+  const ir=ctx.createBuffer(2,len,ctx.sampleRate);
+  for(let c=0;c<2;c++){const d=ir.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3.2);}
+  conv.buffer=ir; revIn=ctx.createGain(); revIn.gain.value=0.28; revIn.connect(conv); conv.connect(master);
+  try{const r=await fetch('../sounds/harp-d4.mp3');harpBuf=await ctx.decodeAudioData(await r.arrayBuffer());}catch(e){harpBuf=null;}
+  return ctx;
+}
+function setVolume(v){volume=v; if(master) master.gain.setTargetAtTime(v,ctx.currentTime,0.02);}
+
+function synth(kind,f){
+  const key=kind+':'+f.toFixed(2); if(cache.has(key)) return cache.get(key);
+  const sr=ctx.sampleRate, dur=kind==='box'?1.8:3.0, n=Math.floor(sr*dur);
+  const buf=ctx.createBuffer(1,n,sr), d=buf.getChannelData(0);
+  if(kind==='piano'){
+    const B=0.00035, parts=[];
+    for(let k=1;k<=10;k++){const fk=k*f*Math.sqrt(1+B*k*k); if(fk>sr/2.3)break;
+      parts.push([fk,(k===1?1:0.75)/Math.pow(k,1.15),(3.2/(1+0.5*k))*Math.pow(440/f,0.3)]);}
+    for(let i=0;i<n;i++){const t=i/sr;let s=0;
+      for(const [fk,a,tau] of parts){s+=a*Math.exp(-t/tau)*(Math.sin(2*Math.PI*(fk-0.2)*t)+Math.sin(2*Math.PI*(fk+0.2)*t))*0.5;}
+      d[i]=s*(1-Math.exp(-t/0.002));}
+    let lp=0; for(let i=0;i<sr*0.02;i++){lp+=0.2*((Math.random()*2-1)-lp); d[i]+=lp*0.25*(1-i/(sr*0.02));}
+  }else if(kind==='box'){
+    for(let i=0;i<n;i++){const t=i/sr;
+      d[i]=(Math.sin(2*Math.PI*f*t)*Math.exp(-t/0.9)+0.3*Math.sin(2*Math.PI*f*3.0*t)*Math.exp(-t/0.25)+0.12*Math.sin(2*Math.PI*f*5.4*t)*Math.exp(-t/0.12))*(1-Math.exp(-t/0.0015));}
+  }
+  let pk=0; for(let i=0;i<n;i++)pk=Math.max(pk,Math.abs(d[i]));
+  const g=0.85/(pk||1); for(let i=0;i<n;i++)d[i]*=g;
+  const fo=Math.floor(sr*0.05); for(let i=0;i<fo;i++) d[n-1-i]*=i/fo;
+  cache.set(key,buf); return buf;
+}
+// 소리 하나 울리기. dur는 '삐'에서만 씀
+function play(f,when=0,dur=0.15,gain=1,kindOverride){
+  if(!ctx) return;
+  const kind=kindOverride||inst(), t=Math.max(ctx.currentTime,when||ctx.currentTime);
+  if(kind==='chord'){[1,1.25,1.5].forEach((r,i)=>play(f*r,t+i*0.028,dur,gain*0.62,'harp'));return;}
+  const out=ctx.createGain(); out.gain.value=gain; out.connect(master); out.connect(revIn);
+  let src;
+  if(kind==='beep'){
+    src=ctx.createOscillator(); src.type='square'; src.frequency.value=f;
+    const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=2600;
+    const env=ctx.createGain(); env.gain.setValueAtTime(0,t); env.gain.linearRampToValueAtTime(0.32,t+0.004);
+    env.gain.setValueAtTime(0.32,t+dur); env.gain.linearRampToValueAtTime(0,t+dur+0.01);
+    src.connect(lp).connect(env).connect(out); src.start(t); src.stop(t+dur+0.03);
+  }else if(kind==='harp'&&harpBuf){
+    src=ctx.createBufferSource(); src.buffer=harpBuf; src.playbackRate.value=f/293.66; src.connect(out); src.start(t);
+  }else{
+    src=ctx.createBufferSource(); src.buffer=synth(kind==='harp'?'piano':kind,f); src.connect(out); src.start(t);
+  }
+  const item={src,out}; active.add(item); src.onended=()=>{active.delete(item);out.disconnect();};
+  return item;
+}
+function stopAll(fade=0.03){
+  if(!ctx) return;
+  for(const it of active){try{it.out.gain.cancelScheduledValues(ctx.currentTime);it.out.gain.setTargetAtTime(0,ctx.currentTime,fade/3);it.src.stop(ctx.currentTime+fade+0.02);}catch(e){}}
+}
+// '삐'는 누르는 동안 계속 울려요
+let held=null;
+function holdStart(f){ if(inst()!=='beep'){play(f);return;}
+  const it=play(f,0,30); held=it; }
+function holdEnd(){ if(held){try{held.out.gain.setTargetAtTime(0,ctx.currentTime,0.005);held.src.stop(ctx.currentTime+0.04);}catch(e){} held=null;} }
+
+/* ======================= LED ======================= */
+const ledTimers={};
+function led(id,on,ms){const el=$(id); el.classList.toggle('on',on); clearTimeout(ledTimers[id]);
+  if(on&&ms) ledTimers[id]=setTimeout(()=>el.classList.remove('on'),ms);}
+
+/* ======================= 해독기 ======================= */
+const DASH_TIME=250, WORD_GAP=2000, NEW_GAP=5000;
+const S={symbols:'',message:'',avgGap:180,lastRelease:0,wordDone:true,ext:false,down:null,downAt:0,dashCounted:false};
+const letterGap=()=>Math.min(800,Math.max(350,S.avgGap*3));
+function render(){
+  $('msg').innerHTML=S.message.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\?/g,'<span class="q">?</span>')+'<span class="cursor">▏</span>';
+  $('code').textContent=S.symbols;
+  if(typeof hintTable==='function') hintTable();
+}
+function addSymbol(sym){
+  S.symbols+=sym; S.wordDone=false; $('hint').textContent=''; render();
+}
+function commitLetter(letter){
+  S.message+=letter; S.symbols=''; render(); led('ledG',true,160);
+  $('hint').textContent= letter==='?'?'글자 사이를 조금 더 쉬어 보세요 (초록 불 기다리기)':'';
+}
+function newSentence(){
+  const m=S.message.trim(); if(m){const h=$('hist'); h.textContent=('지난 문장: '+m+'   ')+(h.dataset.prev||''); h.dataset.prev=('· '+m+' ')+(h.dataset.prev||'').slice(0,80);}
+  S.message='';S.symbols='';S.wordDone=true; render(); led('ledG',true,100); setTimeout(()=>led('ledG',true,100),200);
+}
+function onPress(kind){ // kind: 'dot' | 'dash' | 'one'
+  audio(); if(S.down) return;
+  const now=performance.now(); S.ext=false;
+  if(S.symbols) S.avgGap=(S.avgGap*3+(now-S.lastRelease))/4;
+  S.down=kind; S.downAt=now; S.dashCounted=false;
+  const [fd,fD]=pitchSet();
+  if(kind==='dot'){ holdStart(fd); led('ledY',true); addSymbol('.'); }
+  else if(kind==='dash'){ holdStart(fD); }
+  else { holdStart(fd); led('ledY',true); }
+  $('k'+(kind==='dot'?'Dot':kind==='dash'?'Dash':'One')).classList.add('down');
+}
+function onRelease(kind){
+  if(S.down!==kind) return;
+  const now=performance.now(), heldMs=now-S.downAt;
+  holdEnd(); led('ledY',false); led('ledR',false);
+  $('k'+(kind==='dot'?'Dot':kind==='dash'?'Dash':'One')).classList.remove('down');
+  if(kind==='dash'&&!S.dashCounted){ $('hint').textContent='대시는 꾹 (0.25초 넘게) 눌러요'; }
+  if(kind==='one'){ addSymbol(heldMs<DASH_TIME?'.':'-'); }
+  S.down=null; S.lastRelease=now;
+}
+function tick(){
+  const now=performance.now();
+  if(S.down){
+    const h=now-S.downAt;
+    if(S.down==='dash'&&!S.dashCounted&&h>=DASH_TIME){S.dashCounted=true; led('ledR',true); addSymbol('-');}
+    if(S.down==='one'&&h>=DASH_TIME){led('ledY',false);led('ledR',true);}
+    $('gapbar').style.width='0';
+  }else if(!S.ext && S.lastRelease){
+    const g=now-S.lastRelease;
+    $('gapbar').style.width=Math.min(100,g/NEW_GAP*100)+'%';
+    if(S.symbols && g>letterGap()) commitLetter(REV[S.symbols]||'?');
+    if(!S.wordDone && !S.symbols && g>WORD_GAP){S.message+=' ';S.wordDone=true;render();}
+    if(S.message.trim() && !S.symbols && g>NEW_GAP){newSentence(); S.lastRelease=0;}
+  }
+  $('lgLab').textContent='글자 확정 '+(letterGap()/1000).toFixed(2)+'초';
+}
+setInterval(tick,15); render();
+
+// 버튼·키보드
+function bindKey(el,kind){
+  el.addEventListener('pointerdown',e=>{e.preventDefault();el.setPointerCapture(e.pointerId);onPress(kind);});
+  ['pointerup','pointercancel'].forEach(ev=>el.addEventListener(ev,()=>onRelease(kind)));
+  el.addEventListener('contextmenu',e=>e.preventDefault());
+}
+bindKey($('kDot'),'dot'); bindKey($('kDash'),'dash'); bindKey($('kOne'),'one');
+const keyMap={j:'dot',J:'dot','.':'dot',k:'dash',K:'dash','-':'dash'};
+let stillHolding=false;
+addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'&&e.target.type!=='radio'&&e.target.type!=='range') return;
+  if(e.repeat) {if(e.code==='Space')e.preventDefault(); return;}
+  if(e.code==='Space'){e.preventDefault(); if(still.playing){stillHold(true);return;} onPress('one');return;}
+  const k=keyMap[e.key]; if(k){e.preventDefault(); onPress(k);}
+});
+addEventListener('keyup',e=>{
+  if(e.code==='Space'){ if(still.holding){stillHold(false);return;} onRelease('one');return;}
+  const k=keyMap[e.key]; if(k) onRelease(k);
+});
+$('newBtn').onclick=()=>{newSentence();};
+document.querySelectorAll('input[name=mode]').forEach(r=>r.onchange=()=>{
+  const one=document.querySelector('input[name=mode]:checked').value==='one';
+  $('keys1').hidden=!one; $('keys2').hidden=one;});
+$('vol').oninput=e=>{const v=+e.target.value; $('volOut').textContent=v+'/10'; setVolume(v/10); $('volSrc').textContent='';};
+document.querySelectorAll('input[name=inst]').forEach(r=>r.onchange=async()=>{await audio(); play(pitchSet()[0]);});
+
+/* ======================= 보내기 ======================= */
+let sendId=0; const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+$('sendForm').onsubmit=async e=>{
+  e.preventDefault(); await audio();
+  const text=$('sendIn').value.toUpperCase().replace(/[^A-Z0-9 ]/g,''); if(!text) return;
+  const id=++sendId, U=140, [fd,fD]=pitchSet();
+  let shown='';
+  for(const c of text){
+    if(id!==sendId) return;
+    if(c===' '){shown+=' / '; $('sendCode').innerHTML=shown; await sleep(U*4); continue;}
+    const code=MORSE[c]; shown+='<b>'+c+'</b> '; $('sendCode').innerHTML=shown;
+    for(const s of code){
+      if(id!==sendId) return;
+      const dash=s==='-', len=dash?U*3:U;
+      led(dash?'ledR':'ledY',true); play(dash?fD:fd,0,len/1000);
+      shown+=dash?'—':'·'; $('sendCode').innerHTML=shown;
+      await sleep(len); led(dash?'ledR':'ledY',false); await sleep(U);
+    }
+    led('ledG',true,120); shown+='  '; await sleep(U*2);
+  }
+};
+
+/* ======================= STILL HERE ======================= */
+function buildScore(short){
+  const SU=short?120:150,BU=short?220:300,BG=short?900:1600,PRE=short?1000:2000,STAIL=short?1200:2000,SIL=short?5000:8000,PRES=short?2000:3000,REST=short?1500:4000;
+  const SCALE=[220,262,294,330,392,440,523,587,659,784], MSG='STILL HERE';
+  const lights=[],notes=[],runs=[]; let T=0; const w=ms=>{T+=ms/1000};
+  function send(unit,g,freq,breath,tail){
+    const ch=[...MSG];
+    ch.forEach((c,i)=>{const code=MORSE[c]; if(!code) return;
+      const f=breath?SCALE[(c.charCodeAt(0)-65)%10]:freq;
+      [...code].forEach((s,k)=>{const len=s==='.'?unit:unit*3;
+        lights.push({led:s==='.'?0:1,t0:T,dur:len/1000,breath}); notes.push({t0:T,dur:len/1000,f,v:breath?1:0});
+        runs.push([T,T+len/1000,unit/1000]); w(len); if(k<code.length-1) w(Math.floor(g*unit));});
+      const last=i===ch.length-1, wordEnd=!last&&ch[i+1]===' ';
+      const gap=last?tail:breath?(wordEnd?BG*2.5:BG):Math.floor(g*unit*(wordEnd?7:3));
+      const b=Math.min(60,Math.floor(gap/2)); if(!breath&&b>=15) lights.push({led:2,t0:T,dur:b/1000});
+      w(gap);});
+  }
+  w(PRE); send(SU,1,660,false,STAIL); const tEx=T;
+  const EX=[784,880,1047,1175,1319];
+  for(let r=1;r<=5;r++){const g=1-r/5, unit=Math.floor(SU*Math.pow(0.8,r)); send(unit,g,EX[r-1],false,Math.floor(7*g*unit));}
+  const tTh=T; for(let i=0;i<=40;i++){notes.push({t0:T,dur:0.03,f:1319+(2400-1319)*i/40,v:2}); w(30);}
+  const tCut=T; [0,1,2].forEach(l=>lights.push({led:l,t0:tTh,dur:tCut-tTh})); runs.push([tTh,tCut,0.049]);
+  w(SIL); const tBr=T; send(BU,1,0,true,BG); const tPr=T;
+  lights.push({led:2,t0:T,dur:PRES/1000}); notes.push({t0:T,dur:PRES/1000,f:220,v:3}); w(PRES); const tRest=T; w(REST); const total=T+1.5;
+  // 해독 (화면 아래 글자)
+  runs.sort((a,b)=>a[0]-b[0]); const mr=[];
+  for(const r of runs){const l=mr[mr.length-1]; if(l&&r[0]-l[1]<0.0005) l[1]=Math.max(l[1],r[1]); else mr.push([...r]);}
+  const dec=[], com=[]; let code='', pend=[];
+  mr.forEach((r,i)=>{const sym=(r[1]-r[0])>=2*r[2]-1e-9?'-':'.'; code+=sym; com.push({t:r[1],s:sym,reset:Infinity}); pend.push(com.length-1);
+    if(Math.abs(r[1]-tCut)<1e-6){pend.forEach(p=>com[p].reset=tCut);pend=[];code='';return;}
+    const nx=i+1<mr.length?mr[i+1][0]:Infinity, gap=nx-r[1];
+    if(gap>=2*r[2]-1e-9){const tb=r[1]+2*r[2]; dec.push({t:tb,s:REV[code]||'?'}); pend.forEach(p=>com[p].reset=tb); pend=[]; code='';
+      if(gap>=5*r[2]-1e-9) dec.push({t:r[1]+5*r[2],s:' '}); if(gap>=10*r[2]-1e-9) dec.push({t:r[1]+10*r[2],s:' '});}});
+  return {lights,notes,runs:mr,dec,com,tEx,tTh,tCut,tBr,tPr,tRest,total};
+}
+const still={playing:false,holding:false,t:0,last:0,sc:null,next:0,acc:null,paper:null,cutDone:false};
+const cv=$('cv'), cx=cv.getContext('2d');
+const POS=[[324,274],[484,258],[644,271]], COL=[[255,178,41],[255,38,23],[56,255,107]], AFT=[[82,102,255],[31,217,219],[235,66,219]];
+function makePaper(){const c=document.createElement('canvas');c.width=960;c.height=540;const g=c.getContext('2d');
+  g.fillStyle='rgb(205,205,205)';g.fillRect(0,0,960,540);
+  for(let i=0;i<260;i++){const x=Math.random()*960,y=Math.random()*540,r=30+Math.random()*180,v=140+Math.random()*115|0;
+    const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,`rgba(${v},${v},${v},.10)`);gr.addColorStop(1,`rgba(${v},${v},${v},0)`);g.fillStyle=gr;g.fillRect(x-r,y-r,2*r,2*r);}
+  g.lineCap='round';
+  for(let i=0;i<5000;i++){const x=Math.random()*960,y=Math.random()*540,a=Math.random()*Math.PI*2,L=8+Math.random()**2*140;
+    const dark=Math.random()<.6,v=dark?128+Math.random()*50|0:245;g.strokeStyle=`rgba(${v},${v},${v},${.05+Math.random()*.16})`;g.lineWidth=.4+Math.random()**2*1.4;
+    g.beginPath();g.moveTo(x,y);g.quadraticCurveTo(x+Math.cos(a)*L/2-Math.sin(a)*L*.2,y+Math.sin(a)*L/2+Math.cos(a)*L*.2,x+Math.cos(a)*L,y+Math.sin(a)*L);g.stroke();}
+  return c;}
+function lvl(sc,l,t){let v=0;for(const x of sc.lights){if(x.led!==l||t<x.t0||t>=x.t0+x.dur)continue;
+  if(x.breath){const p=(t-x.t0)/x.dur,q=p<.4?p/.4:(1-p)/.6;v=Math.max(v,q*q);}else v=1;}return v;}
+const lerp=(a,b,p)=>a+(b-a)*p, sm=x=>{x=Math.min(1,Math.max(0,x));return x*x*(3-2*x)};
+function look(sc,t){
+  if(t<sc.tEx) return {c:12,h:80,cg:.95,hg:.55,d:0};
+  if(t<sc.tTh){const p=(t-sc.tEx)/(sc.tTh-sc.tEx);return {c:lerp(12,7,p),h:lerp(80,52,p),cg:.98,hg:lerp(.55,.85,p),d:lerp(.3,.9,Math.pow(p,.8))};}
+  if(t<sc.tCut) return {c:6,h:52,cg:1,hg:.9,d:.92,bloom:lerp(.08,.34,(t-sc.tTh)/(sc.tCut-sc.tTh))};
+  if(t<sc.tBr) return {c:30,h:150,cg:.5,hg:.5,d:0};
+  return {c:32,h:155,cg:.5,hg:.52,d:.3};
+}
+function glow(g,x,y,sig,col,k){if(k<.003)return;const gr=g.createRadialGradient(x,y,0,x,y,sig*3);
+  for(let i=0;i<=8;i++){const u=i/8,e=Math.exp(-Math.pow(u*3,2)/2)*k;gr.addColorStop(u,`rgba(${col[0]*e|0},${col[1]*e|0},${col[2]*e|0},1)`);}
+  g.fillStyle=gr;g.fillRect(x-sig*3,y-sig*3,sig*6,sig*6);}
+function drawStill(){
+  const sc=still.sc, t=still.t, L=look(sc,t);
+  const acc=still.acc.getContext('2d');
+  // 빛 + 잔상(겹침)
+  const lc=still.light.getContext('2d'); lc.globalCompositeOperation='source-over'; lc.fillStyle='#000'; lc.fillRect(0,0,960,540); lc.globalCompositeOperation='lighter';
+  let tot=0;
+  if(!still.holding) for(let l=0;l<3;l++){const I=lvl(sc,l,t);tot+=I;if(I<.003)continue;const c=COL[l];
+    glow(lc,POS[l][0],POS[l][1],L.h,c,I*L.hg); glow(lc,POS[l][0],POS[l][1],L.h*.45,c,I*L.hg*.6);
+    glow(lc,POS[l][0],POS[l][1],L.c,c.map(v=>lerp(v,255,.3)),I*L.cg);}
+  if(L.bloom&&!still.holding) glow(lc,484,265,320,[255,209,168],L.bloom*tot/3);
+  if(still.cut&&t>=sc.tCut&&still.cut!==2){acc.globalCompositeOperation='source-over';acc.fillStyle='#000';acc.fillRect(0,0,960,540);still.cut=2;}
+  if(L.d<=0){acc.globalCompositeOperation='copy';acc.drawImage(still.light,0,0);}
+  else{acc.globalCompositeOperation='source-over';acc.fillStyle=`rgba(0,0,0,${1-L.d})`;acc.fillRect(0,0,960,540);acc.globalCompositeOperation='lighten';acc.drawImage(still.light,0,0);}
+  cx.globalCompositeOperation='source-over'; cx.fillStyle='#000'; cx.fillRect(0,0,960,540);
+  cx.drawImage(still.acc,0,0); cx.globalCompositeOperation='multiply'; cx.drawImage(still.paper,0,0);
+  // 정적: 보색 잔상
+  const s=t-sc.tCut;
+  if(s>0&&t<sc.tBr){const e=s<2.4?sm((s-.7)/1.7):Math.exp(-(s-2.4)/1.2);cx.globalCompositeOperation='lighter';
+    for(let l=0;l<3;l++){glow(cx,POS[l][0]+s*3.5,POS[l][1]-s*1.7,75+s*3,AFT[l],.2*e);glow(cx,POS[l][0]+s*3.5,POS[l][1]-s*1.7,24,AFT[l],.13*e);}}
+  // 글자
+  cx.globalCompositeOperation='source-over';
+  if(!(t>=sc.tCut&&t<sc.tBr)){const lo=t<sc.tCut?0:sc.tBr;
+    const done=sc.dec.filter(d=>d.t>=lo&&d.t<=t).map(d=>d.s).join('');
+    let prog=sc.com.filter(c=>c.t>=lo&&c.t<=t&&t<c.reset).map(c=>c.s).join(''); if(prog.length>30) prog='…'+prog.slice(-29);
+    const r=sc.runs.find(r=>r[0]<=t&&t<r[1]&&r[0]>=lo); if(r){const el=t-r[0]; if(el>=2*r[2]) prog+='-'; if(el>=6*r[2]) prog+='━'.repeat(Math.min(30,el/(3*r[2])|0));}
+    let a=.75; if(t>sc.tRest) a*=1-sm((t-sc.tRest)/2);
+    cx.font='15px "IBM Plex Mono",monospace'; cx.fillStyle=`rgba(238,227,207,${a})`; cx.fillText('> '+done,45,505);
+    const w=cx.measureText('> '+done).width; cx.fillStyle=`rgba(255,204,107,${a})`; cx.fillText(prog,45+w,505);}
+  const titles=[['신호  SIGNAL',.3],['과잉  EXCESS',sc.tEx],['숨  BREATH',sc.tBr+.3]];
+  for(const [tx,st] of titles){const q=t-st; if(q<0||q>5)continue; const a=sm(q/.9)*(1-sm((q-3.8)/1.2))*.6; cx.font='500 17px "IBM Plex Sans KR",sans-serif'; cx.fillStyle=`rgba(238,227,207,${a})`; cx.fillText(tx,45,52);}
+  if(t>sc.tRest+1.6){const a=sm((t-sc.tRest-1.6)/.8); cx.font='600 24px "IBM Plex Mono",monospace'; cx.textAlign='center'; cx.fillStyle=`rgba(238,227,207,${a*.8})`; cx.fillText('S T I L L   H E R E',480,275); cx.textAlign='left';}
+}
+function stillSchedule(){
+  const sc=still.sc, ahead=0.15;
+  while(still.next<sc.notes.length && sc.notes[still.next].t0<=still.t+ahead){
+    const n=sc.notes[still.next++]; if(n.t0<still.t-0.02) continue;
+    const when=ctx.currentTime+(n.t0-still.t);
+    if(n.v===2) play(n.f,when,0.03,0.45);
+    else if(n.v===3) play(n.f,when,1.6,0.55,'chord');
+    else if(n.v===1) play(n.f,when,n.dur,0.8);
+    else play(n.f,when,n.dur,n.t0>sc.tEx?0.55:0.8);
+  }
+}
+function stillFrame(ts){
+  if(!still.playing) return;
+  const dt=Math.min(0.1,(ts-still.last)/1000); still.last=ts;
+  if(!still.holding){
+    const prev=still.t; still.t+=dt;
+    if(prev<still.sc.tCut&&still.t>=still.sc.tCut){stopAll(0.008); still.cut=1;}
+    stillSchedule();
+  }
+  drawStill();
+  if(still.t>=still.sc.total){stillStop(true);return;}
+  requestAnimationFrame(stillFrame);
+}
+async function stillStart(){
+  await audio(); stillStop();
+  still.sc=buildScore(document.querySelector('input[name=slen]:checked').value==='short');
+  still.paper=still.paper||makePaper();
+  for(const k of ['acc','light']){if(!still[k]){const c=document.createElement('canvas');c.width=960;c.height=540;still[k]=c;}}
+  still.acc.getContext('2d').clearRect(0,0,960,540);
+  Object.assign(still,{playing:true,holding:false,t:0,next:0,cut:0,last:performance.now()});
+  $('stillPlay').textContent='■ 멈춤'; $('stageHint').textContent='누르고 있으면 여백 (Space도 돼요)';
+  requestAnimationFrame(stillFrame);
+}
+function stillStop(ended){
+  if(still.playing) stopAll(0.05);
+  still.playing=false; still.holding=false; $('stage').classList.remove('is-paused');
+  $('stillPlay').textContent='▶ 시작'; $('stageHint').textContent=ended?'끝. 다시 보려면 ▶ 시작':'▶ 시작을 누르세요';
+}
+function stillHold(on){
+  if(!still.playing) return;
+  still.holding=on; $('stage').classList.toggle('is-paused',on);
+  if(on){stopAll(0.03);} else {still.next=still.sc.notes.findIndex(n=>n.t0>=still.t); if(still.next<0) still.next=still.sc.notes.length; still.last=performance.now();}
+}
+$('stillPlay').onclick=()=>still.playing?stillStop():stillStart();
+const stage=$('stage');
+stage.addEventListener('pointerdown',e=>{if(!still.playing)return;e.preventDefault();stage.setPointerCapture(e.pointerId);stillHold(true);});
+['pointerup','pointercancel'].forEach(ev=>stage.addEventListener(ev,()=>{if(still.holding)stillHold(false);}));
+cx.fillStyle='#000';cx.fillRect(0,0,960,540);
+
+/* ======================= 아두이노 (Web Serial) ======================= */
+const logEl=$('log'); let logText='';
+function log(s){logText=(logText+s).slice(-6000); logEl.textContent=logText; logEl.scrollTop=logEl.scrollHeight;}
+const meter=$('knobMeter'); for(let i=0;i<10;i++) meter.appendChild(document.createElement('i'));
+function showKnob(vol,raw){
+  $('knobVal').textContent=vol+'/10'; $('knobRaw').textContent='센서 값 '+raw+' / 1023';
+  [...meter.children].forEach((m,i)=>m.classList.toggle('on',i<vol));
+  const frac=raw/1023; $('knobArc').setAttribute('stroke-dasharray',(216.8*frac).toFixed(1)+' 289');
+  $('knobNeedle').setAttribute('transform','rotate('+(-135+270*frac).toFixed(1)+' 60 60)');
+  $('knobWhen').textContent='방금 돌렸어요 · '+new Date().toLocaleTimeString('ko-KR');
+  $('vol').value=vol; $('volOut').textContent=vol+'/10'; $('volSrc').textContent='(회전 센서)'; setVolume(vol/10);
+}
+let lineBuf='';
+function onSerialChar(c){
+  if(c==='\r') return;
+  if(c==='\n'){ handleLine(lineBuf); lineBuf=''; return; }
+  if((c==='.'||c==='-') && /^[.\-]*$/.test(lineBuf)){
+    const [fd,fD]=pitchSet(); S.ext=true; S.wordDone=false;
+    if(c==='.'){play(fd,0,0.12); led('ledY',true,140);} else {play(fD,0,0.36); led('ledR',true,320);}
+    S.symbols+=c; render();
+  }
+  lineBuf+=c;
+}
+function handleLine(line){
+  let m=line.match(/->\s+(\S)/); if(m){ S.symbols=''; commitLetter(m[1]); S.ext=true; }
+  if(line.includes('(띄어쓰기)')){S.message+=' ';render();}
+  if(line.startsWith('=== 문장 끝')) newSentence();
+  m=line.match(/소리 크기\s+(\d+)\/10.*센서 값\s+(\d+)/); if(m) showKnob(+m[1],+m[2]);
+  if(line.includes('STILL HERE 시작')) $('hint').textContent='보드에서 STILL HERE 재생 중 (점 버튼 3초 꾹 = 끄기)';
+  if(line.includes('모스부호기로 돌아왔어요')) $('hint').textContent='';
+  if(line.includes('(대시는 꾹)')) $('hint').textContent='대시는 꾹 (0.25초 넘게) 눌러요';
+}
+let port=null, reader=null;
+$('connBtn').onclick=async()=>{
+  if(!('serial' in navigator)){$('serialNote').textContent='이 브라우저는 아두이노 연결을 지원하지 않아요. 컴퓨터의 Chrome이나 Edge로 열어 주세요.';return;}
+  await audio();
+  if(port){ try{reader&&await reader.cancel();await port.close();}catch(e){} port=null; document.querySelector('.display').classList.remove('live'); $('connStat').textContent='연결 안 됨'; $('connStat').classList.remove('ok'); $('connBtn').textContent='🔌 아두이노 연결'; return; }
+  try{
+    port=await navigator.serial.requestPort(); await port.open({baudRate:9600});
+    $('connStat').textContent='연결됨 · 보드로 쳐 보세요'; $('connStat').classList.add('ok'); $('connBtn').textContent='연결 끊기'; document.querySelector('.display').classList.add('live'); $('hint').textContent='';
+    const dec=new TextDecoderStream(); port.readable.pipeTo(dec.writable).catch(()=>{}); reader=dec.readable.getReader();
+    while(true){const {value,done}=await reader.read(); if(done)break; log(value); for(const ch of value) onSerialChar(ch);}
+  }catch(e){ $('serialNote').textContent='연결하지 못했어요: '+(e.message||e)+' — Arduino IDE의 Serial Monitor가 열려 있으면 닫고 다시 해 보세요.'; port=null; $('connStat').textContent='연결 안 됨'; $('connStat').classList.remove('ok'); $('connBtn').textContent='🔌 아두이노 연결'; }
+};
+if(!('serial' in navigator)) $('serialNote').textContent='지금 브라우저는 아두이노 연결을 지원하지 않아요 (Chrome·Edge에서 돼요). 치기·보내기·STILL HERE는 어디서나 돼요.';
+
+/* ======================= 표 ======================= */
+const glyph=c=>[...c].map(x=>x==='.'?'<i class="dt"></i>':'<i class="ds"></i>').join('');
+const card=([k,v])=>`<button class="mc" data-k="${k}" data-c="${v}" aria-label="${k} ${v}"><b>${k}</b><span class="g">${glyph(v)}</span><small>${v.replace(/\./g,'·').replace(/-/g,'−')}</small></button>`;
+const ents=Object.entries(MORSE);
+$('mtab').innerHTML='<p class="tlabel">알파벳</p><div class="tgrid">'+ents.filter(([k])=>/[A-Z]/.test(k)).map(card).join('')+'</div><p class="tlabel">숫자</p><div class="tgrid">'+ents.filter(([k])=>/[0-9]/.test(k)).map(card).join('')+'</div>';
+document.querySelectorAll('.mc').forEach(b=>b.onclick=async()=>{await audio();const U=140,[fd,fD]=pitchSet();
+  for(const x of b.dataset.c){const d=x==='-';b.classList.add('play');led(d?'ledR':'ledY',true);play(d?fD:fd,0,(d?U*3:U)/1000);await sleep(d?U*3:U);led(d?'ledR':'ledY',false);await sleep(U);}
+  b.classList.remove('play');});
+function hintTable(){const sy=S.symbols;document.querySelectorAll('.mc').forEach(b=>{const c=b.dataset.c;
+  b.classList.toggle('exact',!!sy&&c===sy);b.classList.toggle('cand',!!sy&&c!==sy&&c.startsWith(sy));b.classList.toggle('dim',!!sy&&!c.startsWith(sy));});}
+</script>
+</body>
+</html>
