@@ -35,7 +35,7 @@ const bool USE_KNOB      = true;  // 회전 센서(A0)로 소리 크기 조절. 
 const bool USE_RGB       = true;  // RGB 라이트: 글자마다 새 색, 음마다 무지개색, 소리 크기를 빛으로
 const bool USE_MIC       = true;  // 소리 센서: 소리를 빛으로 보여주고, mic 입력하면 소리로 모스부호 치기
 const bool BREATH_SOS    = true;  // 숨·목소리로 치기: 짧게 = 점 · 길게(0.6초~) = 대시 · 아주 길게(2.5초~) = HERE 자동 송신
-const int  MIC_THRESHOLD = 40;    // 소리로 칠 때 이보다 크면 '누름' (miclevel 로 내 방 소리 크기를 먼저 보세요)
+const int  MIC_THRESHOLD = 40;    // 소리로 칠 때 '소리'로 보는 기준의 최댓값. 실제 기준은 방 소음에 맞춰 자동으로 더 낮아져요 (목소리·쿵쿵도 잡게)
 const bool LOUD_MODE     = true;  // 9번 핀도 같이 써서 최대 소리 (부저 − 다리가 9번에 있을 때). GND에 있으면 상관없어요
 const bool BUZZER_ON     = true;  // false면 부저는 조용 (소리는 웹사이트에서만)
 const bool BUZZER_ACTIVE = false; // 음 높이가 안 바뀌는 부저(능동 부저)면 true
@@ -201,6 +201,7 @@ void rgbFlash(int hue, int v, unsigned long ms) { setHue(hue, v); rgbHoldUntil =
 // =============================================================
 //  소리 센서: 짧은 시간 동안 가장 큰 값 − 가장 작은 값 = 지금 소리 크기
 // =============================================================
+int micFloor = 3 * 16, micThOn = 20;            // 바닥 소음(×16)과 지금 기준 (소리 센서)
 bool micMode = false;                           // 마지막 입력이 소리였으면 글자·띄어쓰기 시간을 넉넉하게
 int micLevel = 0;                               // 0~ (조용하면 한 자리, 박수·목소리면 수십~수백)
 int micMin = 1023, micMax = 0;
@@ -665,10 +666,10 @@ void micLevelPrint() {                          // miclevel: 4초 동안 소리 
     while (millis() - t < 200) { micUpdate(); if (micLevel > pk) pk = micLevel; }
     Serial.print(F("  ")); Serial.print(pk); Serial.print(F("\t"));
     for (int i = 0; i < min(40, pk / 8); i++) Serial.print('|');
-    if (pk > MIC_THRESHOLD) Serial.print(F("  ← 누름으로 인식"));
+    if (pk > micThOn) Serial.print(F("  ← 소리로 인식"));
     Serial.println();
   }
-  Serial.print(F("지금 기준(MIC_THRESHOLD) = ")); Serial.println(MIC_THRESHOLD);
+  Serial.print(F("조용할 때 소음 ≈ ")); Serial.print(micFloor / 16); Serial.print(F(" · 지금 기준 = ")); Serial.print(micThOn); Serial.println(F(" (방 소음에 맞춰 자동)"));
 }
 
 // ---------- 숨(후~) 감지 → 자동 송신 ----------
@@ -725,7 +726,10 @@ bool handleSoundKey(unsigned long now) {
   if (noteActive) { quietSince = now; sOn = false; sEnv = 0; return false; }
   if (now - quietSince < 400) return false;
   if (now - sEnvT >= 25) { sEnvT = now; sEnv = max(micLevel, sEnv * 3 / 4); }   // 부드럽게 (갑자기 0이 되지 않게)
-  const int thOn = MIC_THRESHOLD, thOff = MIC_THRESHOLD * 2 / 3;
+  // 방이 조용할 때의 소리(바닥 소음)를 천천히 배워서, 그보다 확실히 크면 '소리'로 봐요
+  if (!sOn && micLevel < micThOn) micFloor = (micFloor * 31 + micLevel * 16 + 16) / 32;   // 16배로 저장 (소수점 대신)
+  micThOn = constrain(micFloor / 16 * 2 + 12, 14, MIC_THRESHOLD);
+  const int thOn = micThOn, thOff = max(8, micThOn * 2 / 3);
   if (!sOn) {
     if (sEnv > thOn && !pressedAny()) { sOn = true; sStart = now; sBelow = 0; digitalWrite(DOT_LED, HIGH); }
     return false;
@@ -740,7 +744,7 @@ bool handleSoundKey(unsigned long now) {
     sOn = false; sEnv = 0;
     unsigned long len = sBelow - sStart;
     digitalWrite(DOT_LED, LOW); digitalWrite(DASH_LED, LOW); setRGB(0, 0, 0);
-    if (len < 60) return true;                    // 아주 짧은 잡음은 무시
+    if (len < 30) return true;                    // 아주 짧은 잡음만 무시 (쿵·짝 같은 짧은 소리는 점이 돼요)
     Serial.print(F("\n[소리] ")); Serial.print(len / 1000.0, 2); Serial.print(F("초 → "));
     if (len >= S_HERE) {
       Serial.println(F("아주 길게 = HERE"));
