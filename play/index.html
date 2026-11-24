@@ -587,6 +587,7 @@ function handleLine(line){
   m=line.match(/소리 크기\s+(\d+)\/10.*센서 값\s+(\d+)/); if(m) showKnob(+m[1],+m[2]);
   if(line.includes('STILL HERE 시작')) $('hint').textContent='보드에서 STILL HERE 재생 중 (점 버튼 3초 꾹 = 끄기)';
   if(line.includes('모스부호기로 돌아왔어요')) $('hint').textContent='';
+  m=line.match(/\[음 바꾸기\]\s*(.+?)\s+\(/); if(m) $('hint').textContent='보드 음 바꿈: '+m[1];
   if(line.includes('(대시는 꾹)')) $('hint').textContent='대시는 꾹 (0.25초 넘게) 눌러요';
 }
 let port=null, reader=null;

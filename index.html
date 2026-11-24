@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap">
 <style>
 /* Layout: one reading column. Each step = my real part photos (left) beside the breadboard plan + checklist (right). */
 :root{
@@ -126,7 +128,7 @@ section[id^="step-"] ol.todo li::before{counter-increment:t;content:counter(t);f
 .rm-row{stroke:var(--line);stroke-width:7;stroke-linecap:round}.rm-on{stroke:#2FA35A;opacity:.35}
 .rm-test{font-size:13px;margin:0!important}
 .tb-svg{width:100%;display:block}
-.pdf-link{margin:10px 0 0}.pdf-link a{display:inline-block;padding:7px 14px;border-radius:999px;background:var(--surface2);border:1px solid var(--line);color:var(--ink);text-decoration:none;font-weight:600;font-size:14px}.pdf-link a:hover{border-color:var(--accent)}.pdf-link a.cta{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pdf-link{margin:10px 0 0}.pdf-link a{display:inline-block;padding:7px 14px;border-radius:999px;background:var(--surface2);border:1px solid var(--line);color:var(--ink);text-decoration:none;font-weight:600;font-size:14px}.pdf-link a:hover{border-color:var(--accent)}
 .sos-cmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:10px}.sos-cmp span{font-size:12.5px;color:var(--muted)}.sos-cmp .bad{color:#C0392B}.sos-cmp .good{color:#2FA35A}.sos-cmp pre{margin:4px 0}
 .env-svg{width:100%;max-width:460px;display:block;margin:10px 0}
 .pin-move{width:100%;max-width:460px;display:block;margin:6px 0 10px;overflow:visible}
@@ -178,6 +180,47 @@ pre.code{margin:0;font:13px/1.55 var(--mono);background:var(--surface);border:1p
   .fix div{gap:4px}
 }
 /* print / PDF: one step per A4 page, photos in a row above the board plan */
+/* ===== 모던 · 미니멀 테마 ===== */
+:root{--bg:#FAFAF8;--surface:#FFFFFF;--surface2:#F3F2EE;--ink:#111111;--muted:#6B6B6B;--line:#E7E6E2;--accent:#111111;--accent-soft:#EEEDE8;--signal:#E0A100;--board:#FFFFFF;--hole:#C2C0B9;--wire-edge:#8A8A86;
+  --body:'Pretendard Variable',Pretendard,-apple-system,"Apple SD Gothic Neo",system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,monospace;--num:'Pretendard Variable',Pretendard,system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E0E0D;--surface:#151514;--surface2:#1C1C1B;--ink:#F2F2EF;--muted:#9A9A96;--line:#272725;--accent:#F2F2EF;--accent-soft:#232321;--board:#171716;--hole:#56564F;--wire-edge:#AFAFAA}}
+:root[data-theme="dark"]{--bg:#0E0E0D;--surface:#151514;--surface2:#1C1C1B;--ink:#F2F2EF;--muted:#9A9A96;--line:#272725;--accent:#F2F2EF;--accent-soft:#232321;--board:#171716;--hole:#56564F;--wire-edge:#AFAFAA}
+body{font-size:15.5px;letter-spacing:-.01em;-webkit-font-smoothing:antialiased}
+h1{letter-spacing:-.04em;line-height:1.08}
+h2{letter-spacing:-.03em}h3{letter-spacing:-.02em}
+.kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.m i{background:var(--ink)}
+.sos .ch b{font-family:var(--mono);font-weight:600;font-size:20px}
+.progress .bar{height:3px;background:var(--surface2)}.progress .bar i{background:var(--ink)}
+.toc{gap:6px}.toc a{border:0;background:var(--surface2);color:var(--muted);border-radius:8px;padding:6px 11px}.toc a:hover{color:var(--ink)}
+.toc a.done{background:var(--ink);color:var(--bg)}
+@media screen{section{padding-block:64px;gap:24px}.top{padding-block:56px 40px;gap:22px}h1{font-size:clamp(36px,6vw,56px)}}
+.step-head{gap:14px;align-items:center}
+.step-no{font-family:var(--mono);font-size:12.5px;font-weight:500;line-height:1;color:var(--muted);min-width:0;border:1px solid var(--line);border-radius:999px;padding:7px 12px;background:var(--surface);white-space:nowrap}
+.step-no::before{content:"STEP "}
+.done-box{border-radius:10px;background:var(--surface2);border-color:transparent;font-weight:500}
+.done-box:has(input:checked){background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.part,.board-wrap,.detail,ol.todo li,.callout{border-radius:16px}
+.callout{border-color:var(--line);background:var(--surface2)}
+.badge{box-shadow:none;font:600 13px/30px var(--mono)}
+.photo img,.labeled img{border-radius:14px}
+ol.todo li{padding:12px 14px}
+section[id^="step-"] ol.todo li::before{font:500 11.5px/22px var(--mono);background:var(--ink);color:var(--bg)}
+.why{border-radius:14px;padding:14px 16px}
+.note{border-left-width:2px}
+code.hole{background:var(--surface2);font-weight:500}
+.pdf-link{display:flex;flex-wrap:wrap;gap:8px}
+.pdf-link a{border-radius:10px;background:var(--surface2);border:1px solid transparent;font-weight:500;padding:9px 16px}
+.pdf-link a.cta{background:var(--ink);color:var(--bg)}
+.gnav{position:sticky;top:0;z-index:20;margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.gnav .in{max-width:1080px;margin:0 auto;min-height:56px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px}
+.glogo{font-family:var(--mono);font-weight:600;text-decoration:none;color:var(--ink);display:flex;align-items:center;gap:10px}
+.glogo i{display:inline-block;height:6px;border-radius:9px;background:var(--ink)}
+.glinks{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.glinks a{padding:6px 10px;border-radius:8px;color:var(--muted);text-decoration:none;font-size:14px;white-space:nowrap}
+.glinks a:hover{background:var(--surface2);color:var(--ink)}
+.glinks a.go{background:var(--ink);color:var(--bg)}
+@media print{.gnav{display:none}}
 @media print{
   .pdf-link{display:none}
   @page{size:A4;margin:12mm 11mm}
@@ -236,6 +279,7 @@ pre.code{margin:0;font:13px/1.55 var(--mono);background:var(--surface);border:1p
 
 </head>
 <body>
+<nav class="gnav" aria-label="사이트 메뉴"><div class="in"><a class="glogo" href="#"><span style="display:flex;gap:4px;align-items:center"><i style="width:6px"></i><i style="width:18px"></i><i style="width:6px"></i></span>Morse</a><div class="glinks"><a href="#parts">준비물</a><a href="#step-1">만들기</a><a href="#use">치는 법</a><a href="#fix">안 될 때</a><a href="guide.pdf" target="_blank" rel="noopener">PDF</a><a class="go" href="play/">치기 →</a></div></div></nav>
 <header class="top wrap">
   <p class="kicker">영상프로그래밍방법론 · 11주차 · ARDUINO UNO</p>
   <h1>모스부호기 만들기</h1>
@@ -245,13 +289,13 @@ pre.code{margin:0;font:13px/1.55 var(--mono);background:var(--surface);border:1p
     <span class="ch"><b>O</b><span class="m"><i class="D"></i><i class="D"></i><i class="D"></i></span></span>
     <span class="ch"><b>S</b><span class="m"><i class="d"></i><i class="d"></i><i class="d"></i></span></span>
   </div>
-  <p class="pdf-link"><a class="cta" href="play/">⌨️ 보드 연결해서 치기 →</a> <a href="guide.pdf" target="_blank" rel="noopener">📄 PDF로 보기 · 내려받기</a></p>
+  <p class="pdf-link"><a class="cta" href="play/">⌨️ 보드 연결해서 치기 →</a><a href="guide.pdf" target="_blank" rel="noopener">📄 PDF로 보기 · 내려받기</a></p>
   <div class="progress"><span id="prog">0 / 7 단계 완료</span><div class="bar"><i id="bar"></i></div></div>
   <nav class="toc" aria-label="목차">
     <a href="#parts">준비물</a><a href="#board">브레드보드</a><a href="#pins">핀 찾기</a>
     <a href="#step-1" data-s="1">1 GND</a><a href="#step-2" data-s="2">2 버튼</a><a href="#step-3" data-s="3">3 노랑 LED</a>
     <a href="#step-4" data-s="4">4 빨강·초록</a><a href="#step-5" data-s="5">5 부저</a><a href="#step-6" data-s="6">6 회전 센서</a>
-    <a href="#step-7" data-s="7">7 업로드</a><a href="#use">8 치는 법</a><a href="#two-btn">9 버튼 2개</a><a href="#sos-sound">10 SOS 연습</a><a href="#harp">11 회전 센서</a><a href="#flow">전기 흐름</a><a href="#fix">안 될 때</a><a href="#morse">모스부호 표</a><a href="#code">코드</a>
+    <a href="#step-7" data-s="7">7 업로드</a><a href="#use">8 치는 법</a><a href="#two-btn">9 버튼 2개</a><a href="#sos-sound">10 SOS · 음 높이</a><a href="#harp">11 회전 센서</a><a href="#flow">전기 흐름</a><a href="#fix">안 될 때</a><a href="#morse">모스부호 표</a><a href="#code">코드</a>
   </nav>
 </header>
 
@@ -663,7 +707,7 @@ pre.code{margin:0;font:13px/1.55 var(--mono);background:var(--surface);border:1p
 </section>
 
 <section id="sos-sound">
-  <div class="step-head"><span class="step-no">10</span><div class="t"><h2>SOS 연습 · 소리 바꾸기</h2><p class="lede">버튼 2개로 칠 때 <code>?</code>가 나오는 두 가지 이유와, 부저를 하프·화음 소리로 바꾸는 법이에요.</p></div></div>
+  <div class="step-head"><span class="step-no">10</span><div class="t"><h2>SOS 연습 · 음 높이 바꾸기</h2><p class="lede">버튼 2개로 칠 때 <code>?</code>가 나오는 두 가지 이유와, 부저 음 높이를 바꾸는 법이에요.</p></div></div>
   <div class="use-grid">
     <div>
       <h3 class="use-h">SOS 치는 법 (버튼 2개)</h3>
@@ -684,9 +728,15 @@ pre.code{margin:0;font:13px/1.55 var(--mono);background:var(--surface);border:1p
       </div>
     </div>
     <div>
-      <h3 class="use-h">부저 소리 바꾸기</h3>
-      <p class="why"><b>부저는 삐 소리 하나만 내요.</b> 부저는 한 가지 떨림만 내는 부품이라 피아노·하프 소리는 안 나요. 소리 크기는 회전 센서로 바꿔요 (11단계).</p>
-      <p class="note">하프·피아노 소리로 치고 싶으면 <a href="play/">치기 페이지</a>를 써요.</p>
+      <h3 class="use-h">음 높이 바꾸기 (morse_all)</h3>
+      <div class="check" role="table" aria-label="음 높이 기능">
+        <div role="columnheader">기능</div><div role="columnheader">어떻게</div>
+        <div><b>A</b> 점·대시 다른 음</div><div>점은 높게, 대시는 낮게(5도 아래). 귀로도 구분돼요</div>
+        <div><b>B</b> 음 바꾸기</div><div><b>점 버튼 + 대시 버튼을 동시에</b> 눌렀다 떼기 → 원래 → 도 → 미 → 솔 → 높은 도 → 다시 원래. 초록이 세트 번호만큼 깜빡이고, 점 음 → 대시 음을 미리 들려줘요</div>
+        <div><b>C</b> 글자마다 음</div><div>글자가 확정될 때 그 글자의 음이 울려서 문장이 짧은 멜로디가 돼요. 끄려면 <code class="hole">LETTER_MELODY = false</code></div>
+      </div>
+      <pre class="out">[음 바꾸기] 솔  (점 784Hz · 대시 523Hz)</pre>
+      <p class="note">부저는 음 높이만 바꿀 수 있고 피아노·하프 같은 음색은 못 내요. 하프 소리는 <a href="play/">치기 페이지</a>에서 나요.</p>
     </div>
   </div>
 </section>
@@ -709,7 +759,7 @@ pre.code{margin:0;font:13px/1.55 var(--mono);background:var(--surface);border:1p
 ① 부저 − 다리와 파란 − 줄 사이에 <b>저항</b>이 끼어 있으면 빼고, 그 자리를 그냥 <b>선</b>으로 이어요. (부저에는 저항이 필요 없어요)<br>
 ② 부저 − 다리 줄(<code class="hole">j36</code>)에서 − 줄로 가는 선을 빼서, 그 끝을 아두이노 <b>9번</b>에 꽂아요. 8번과 9번이 번갈아 밀고 당겨서 <b>소리가 약 2배</b> 커져요. (코드의 <code class="hole">LOUD_MODE = true</code>가 기본값)</p>
       <p class="why"><b>소리가 안 나요?</b> ① 파란 선이 8번에 있는지 ② 회전 센서가 0(끝까지 왼쪽)이 아닌지 ③ Serial Monitor 맨 위에 <code>[회전 센서]</code> 줄이 보이는지(안 보이면 아직 예전 코드) 확인해요.</p>
-      <p class="note">회전 센서가 없으면 코드 위쪽 <code class="hole">USE_KNOB</code>를 <code class="hole">false</code>로, 크기는 <code class="hole">VOLUME</code>(0~10)으로 정해요. <a href="play/">치기 페이지</a>에서 보드를 연결하면 같은 숫자가 바늘 그림으로 보여요.</p>
+      <p class="note">회전 센서가 없으면 코드 위쪽 <code class="hole">USE_KNOB</code>를 <code class="hole">false</code>로, 크기는 <code class="hole">VOLUME</code>(0~10)으로 정해요. 웹사이트에 연결하면 같은 숫자가 바늘 그림으로 보여요.</p>
     </div>
   </div>
 </section>

@@ -35,6 +35,16 @@ const bool BUZZER_ACTIVE = false; // 음 높이가 안 바뀌는 부저(능동 �
 const bool TWO_BUTTONS   = true;  // 버튼 2개: 2번 = 점, 3번 = 대시(꾹). false면 버튼 1개로 짧게/길게
 const int  VOLUME        = 10;     // 소리 크기: 1(아주 작게) ~ 10(가장 크게). 회전 센서를 쓰면 센서가 정해요
 const int  BASE_FREQ     = 800;   // 모스부호기 소리 높이 (Hz) — 원래 높이
+const bool LETTER_MELODY = true;  // (C) 글자가 확정될 때마다 그 글자의 음을 짧게 울려요 → 문장이 멜로디가 돼요
+
+// (A)(B) 음 세트: [이름, 점 음, 대시 음]. 점은 높게, 대시는 낮게(5도 아래).
+// 점 버튼과 대시 버튼을 '동시에' 누르면 다음 세트로 바뀌어요.
+const char* const PITCH_NAME[5] = { "원래", "도", "미", "솔", "높은 도" };
+const int PITCH_DOT[5]  = { 800, 523, 659, 784, 1047 };
+const int PITCH_DASH[5] = { 533, 349, 440, 523, 698 };
+int pitchSet = 0;
+int dotFreq()  { return PITCH_DOT[pitchSet]; }
+int dashFreq() { return PITCH_DASH[pitchSet]; }
 
 const bool STILL_1MIN    = true;  // STILL HERE 길이: true = 약 1분, false = 약 84초
 const bool STILL_REPEAT  = false; // true면 끌 때까지 STILL HERE를 계속 반복
@@ -357,7 +367,7 @@ unsigned long avgGap = 180;   // 점·대시 사이에 평소 쉬는 시간 (치
 // 글자 확정 시간 = 평소 쉬는 시간의 3배 (0.35초 ~ LETTER_GAP)
 unsigned long letterGapNow() { return constrain(avgGap * 3, 350UL, LETTER_GAP); }
 
-int currentFreq() { return BASE_FREQ; }
+int currentFreq() { return dotFreq(); }
 void soundOn(int f) { buzzerOn(f); lastFreq = f; }
 void soundOff()     { noteRelease(); }
 
@@ -373,7 +383,7 @@ void sendText(String text) {
     for (int j = 0; code[j]; j++) {
       bool isDash = (code[j] == '-');
       int led = isDash ? DASH_LED : DOT_LED;
-      digitalWrite(led, HIGH); soundOn(currentFreq());
+      digitalWrite(led, HIGH); soundOn(isDash ? dashFreq() : dotFreq());
       soundDelay(isDash ? UNIT * 3 : UNIT);
       digitalWrite(led, LOW); soundOff();
       soundDelay(UNIT);
@@ -410,7 +420,7 @@ bool handleDashButton(unsigned long now) {
     if (symbols.length() > 0) avgGap = (avgGap * 3 + (now - releaseTime)) / 4;
     dashPressed = true; dashCounted = false;
     dashStart = now;
-    soundOn(currentFreq());
+    soundOn(dashFreq());
     delay(DEBOUNCE);
     return true;
   }
@@ -436,11 +446,44 @@ bool handleDashButton(unsigned long now) {
   return false;
 }
 
+// (C) 글자마다 음: 라 단조 5음계 (STILL HERE '숨'과 같은 음계). ? 는 낮은 소리
+int letterNote(char c) {
+  if (c >= 'A' && c <= 'Z') return SCALE[(c - 'A') % 10] * 2;   // 한 옥타브 위라 부저에서 잘 들려요
+  if (c >= '0' && c <= '9') return SCALE[(c - '0') % 10] * 2;
+  return 196;
+}
+
+// (B) 점 버튼과 대시 버튼을 동시에 누르면 음 세트가 바뀌어요
+bool checkPitchChange(unsigned long now) {
+  if (!TWO_BUTTONS) return false;
+  if (!(digitalRead(BUTTON_PIN) == LOW && digitalRead(DASH_BUTTON_PIN) == LOW)) return false;
+  // 먼저 눌린 버튼이 친 기호는 지워요
+  if (pressed && TWO_BUTTONS && symbols.length() > 0 && symbols[symbols.length() - 1] == '.') symbols.remove(symbols.length() - 1);
+  if (dashPressed && dashCounted && symbols.length() > 0 && symbols[symbols.length() - 1] == '-') symbols.remove(symbols.length() - 1);
+  pitchSet = (pitchSet + 1) % 5;
+  buzzerOff();
+  digitalWrite(DOT_LED, LOW); digitalWrite(DASH_LED, LOW);
+  Serial.print(F("\n[음 바꾸기] "));
+  Serial.print(PITCH_NAME[pitchSet]);
+  Serial.print(F("  (점 "));  Serial.print(dotFreq());
+  Serial.print(F("Hz · 대시 ")); Serial.print(dashFreq());
+  Serial.println(F("Hz)"));
+  for (int i = 0; i <= pitchSet; i++) { digitalWrite(LETTER_LED, HIGH); delay(90); digitalWrite(LETTER_LED, LOW); delay(90); }   // 초록 = 몇 번째 세트
+  buzzerOn(dotFreq());  delay(160); buzzerOff(); delay(40);       // 미리 듣기: 점 음 → 대시 음
+  buzzerOn(dashFreq()); delay(260); buzzerOff();
+  while (digitalRead(BUTTON_PIN) == LOW || digitalRead(DASH_BUTTON_PIN) == LOW) { }   // 두 손 다 뗄 때까지
+  delay(DEBOUNCE);
+  pressed = false; dashPressed = false; dashCounted = false; switchArmed = false;
+  releaseTime = millis();
+  return true;
+}
+
 void morseLoop() {
   updateSound();
   readKnob();
   bool down = (digitalRead(BUTTON_PIN) == LOW);
   unsigned long now = millis();
+  if (checkPitchChange(now)) return;            // (B) 두 버튼 동시 = 음 바꾸기
   if (handleDashButton(now)) return;
 
   if (down && !pressed) {
@@ -455,6 +498,7 @@ void morseLoop() {
     unsigned long held = now - pressStart;
     if (!TWO_BUTTONS && held >= DASH_TIME && held < SWITCH_HOLD / 2) {
       digitalWrite(DOT_LED, LOW); digitalWrite(DASH_LED, HIGH);
+      if (noteBase != dashFreq()) soundOn(dashFreq());   // 길어지면 대시 음으로
     }
     if (held >= SWITCH_HOLD / 2) {              // 1.5초부터: 소리 끄고 초록이 깜빡이며 세기
       soundOff(); digitalWrite(DASH_LED, LOW);
@@ -492,7 +536,10 @@ void morseLoop() {
       if (letter == '?') Serial.print(F("   (글자 사이를 조금 더 쉬어 보세요)"));
       Serial.println();
       symbols = "";
-      digitalWrite(LETTER_LED, HIGH); delay(150); digitalWrite(LETTER_LED, LOW);
+      digitalWrite(LETTER_LED, HIGH);
+      if (LETTER_MELODY) { buzzerOn(letterNote(letter)); delay(letter == '?' ? 120 : 220); buzzerOff(); }   // (C) 글자 음
+      else delay(150);
+      digitalWrite(LETTER_LED, LOW);
     }
     if (!wordSpaceDone && symbols.length() == 0 && now - releaseTime > WORD_GAP) {
       message += ' ';
@@ -536,6 +583,7 @@ void setup() {
   Serial.println(F("STILL HERE: 버튼 3초 꾹 (또는 still 입력)"));
   if (USE_KNOB) { lastKnobRaw = analogRead(KNOB_PIN); knobVolume = min(10, (lastKnobRaw + 51) / 102); printKnob(lastKnobRaw); }
   Serial.println(F("새 문장: 5초 쉬기 (또는 new 입력)"));
+  if (TWO_BUTTONS) Serial.println(F("음 바꾸기: 점 버튼 + 대시 버튼 동시에 (원래 → 도 → 미 → 솔 → 높은 도)"));
 }
 
 void loop() {
