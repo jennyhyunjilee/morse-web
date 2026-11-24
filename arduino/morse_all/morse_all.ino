@@ -32,7 +32,7 @@ const bool BUZZER_ON     = true;  // false면 부저는 조용 (소리는 웹사
 const bool BUZZER_ACTIVE = false; // 음 높이가 안 바뀌는 부저(능동 부저)면 true
 const bool TWO_BUTTONS   = true;  // 버튼 2개: 2번 = 점, 3번 = 대시(꾹). false면 버튼 1개로 짧게/길게
 const int  VOLUME        = 7;     // 소리 크기: 1(아주 작게) ~ 10(가장 크게). 회전 센서를 쓰면 센서가 정해요
-const int  BASE_FREQ     = 660;   // 모스부호기 소리 높이 (Hz)
+const int  BASE_FREQ     = 800;   // 모스부호기 소리 높이 (Hz) — 원래 높이
 
 const bool STILL_1MIN    = true;  // STILL HERE 길이: true = 약 1분, false = 약 84초
 const bool STILL_REPEAT  = false; // true면 끌 때까지 STILL HERE를 계속 반복
@@ -522,7 +522,7 @@ void setup() {
 
   int leds[3] = {DOT_LED, DASH_LED, LETTER_LED};       // 점검: 노랑 → 빨강 → 초록
   for (int i = 0; i < 3; i++) { digitalWrite(leds[i], HIGH); delay(300); digitalWrite(leds[i], LOW); }
-  int testFreq[3] = {440, 660, 880};                    // 점검: 낮은 음 → 높은 음
+  int testFreq[3] = {400, 800, 1600};                    // 점검: 낮은 음 → 높은 음
   for (int i = 0; i < 3; i++) { buzzerOn(testFreq[i]); delay(200); buzzerOff(); delay(80); }
 
   Serial.println(F("=== 모스부호기 준비 완료 ==="));
