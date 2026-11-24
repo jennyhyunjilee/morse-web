@@ -24,10 +24,12 @@ const int DOT_LED    = 5;   // 노랑 = 점 (서서히 밝아지기 가능)
 const int DASH_LED   = 6;   // 빨강 = 대시 (서서히 밝아지기 가능)
 const int LETTER_LED = 7;   // 초록 = 글자 확정
 const int BUZZER_PIN = 8;   // 부저 + 다리
+const int BUZZER_PIN2 = 9;  // (최대 소리) 부저 − 다리를 GND 대신 9번에 꽂으면 2배 크게
 const int KNOB_PIN   = A0;
 
 // ---------- 설정 (여기만 바꾸면 됨) ----------
 const bool USE_KNOB      = true;  // 회전 센서(A0)로 소리 크기 조절. 센서가 없으면 false
+const bool LOUD_MODE     = true;  // 9번 핀도 같이 써서 최대 소리 (부저 − 다리가 9번에 있을 때). GND에 있으면 상관없어요
 const bool BUZZER_ON     = true;  // false면 부저는 조용 (소리는 웹사이트에서만)
 const bool BUZZER_ACTIVE = false; // 음 높이가 안 바뀌는 부저(능동 부저)면 true
 const bool TWO_BUTTONS   = true;  // 버튼 2개: 2번 = 점, 3번 = 대시(꾹). false면 버튼 1개로 짧게/길게
@@ -82,8 +84,8 @@ int knobVolume = VOLUME;     // 회전 센서가 정한 소리 크기 (0~10)
 int volumeNow() { return USE_KNOB ? knobVolume : VOLUME; }
 
 ISR(TIMER1_COMPA_vect) {               // 부저 = 8번 핀 = PB0
-  if (phaseOn) { PORTB &= ~_BV(0); phaseOn = false; OCR1A = offTicks; }
-  else         { PORTB |=  _BV(0); phaseOn = true;  OCR1A = onTicks;  }
+  if (phaseOn) { PORTB &= ~_BV(0); if (LOUD_MODE) PORTB |=  _BV(1); phaseOn = false; OCR1A = offTicks; }
+  else         { PORTB |=  _BV(0); if (LOUD_MODE) PORTB &= ~_BV(1); phaseOn = true;  OCR1A = onTicks;  }
 }
 
 void timerStop() {
@@ -91,7 +93,7 @@ void timerStop() {
   TIMSK1 &= ~_BV(OCIE1A);
   TCCR1B = 0;
   phaseOn = false;
-  PORTB &= ~_BV(0);
+  PORTB &= ~(_BV(0) | _BV(1));
   interrupts();
 }
 
@@ -118,7 +120,7 @@ void buzzerHW(int f) {
   interrupts();
 }
 
-void soundSetup() { pinMode(BUZZER_PIN, OUTPUT); }
+void soundSetup() { pinMode(BUZZER_PIN, OUTPUT); pinMode(BUZZER_PIN2, OUTPUT); digitalWrite(BUZZER_PIN2, LOW); }
 
 void buzzerOn(int f) {                                     // 소리 시작
   if (BUZZER_ACTIVE) { if (BUZZER_ON && volumeNow() > 0) digitalWrite(BUZZER_PIN, HIGH); return; }

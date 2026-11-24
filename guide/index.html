@@ -696,6 +696,9 @@ pre.code{margin:0;font:13px/1.55 var(--mono);background:var(--surface);border:1p
         <div>■■■■■■■□□□</div><div>소리 크기를 막대로</div>
         <div>센서 값 <b>714</b> / 1023</div><div>손잡이가 실제로 돌아간 정도 (0~1023)</div>
       </div>
+      <p class="why"><b>더 크게 (최대 소리)</b> 회전 센서 10이 코드로 낼 수 있는 가장 큰 소리예요. 그보다 크게 하려면 선을 바꿔요.<br>
+① 부저 − 다리와 파란 − 줄 사이에 <b>저항</b>이 끼어 있으면 빼고, 그 자리를 그냥 <b>선</b>으로 이어요. (부저에는 저항이 필요 없어요)<br>
+② 부저 − 다리 줄(<code class="hole">j36</code>)에서 − 줄로 가는 선을 빼서, 그 끝을 아두이노 <b>9번</b>에 꽂아요. 8번과 9번이 번갈아 밀고 당겨서 <b>소리가 약 2배</b> 커져요. (코드의 <code class="hole">LOUD_MODE = true</code>가 기본값)</p>
       <p class="why"><b>소리가 안 나요?</b> ① 파란 선이 8번에 있는지 ② 회전 센서가 0(끝까지 왼쪽)이 아닌지 ③ Serial Monitor 맨 위에 <code>[회전 센서]</code> 줄이 보이는지(안 보이면 아직 예전 코드) 확인해요.</p>
       <p class="note">회전 센서가 없으면 코드 위쪽 <code class="hole">USE_KNOB</code>를 <code class="hole">false</code>로, 크기는 <code class="hole">VOLUME</code>(0~10)으로 정해요. 웹사이트에 연결하면 같은 숫자가 바늘 그림으로 보여요.</p>
     </div>
